@@ -173,3 +173,57 @@ pub async fn write_tierlist(
     tx.commit().await?;
     Ok(())
 }
+
+pub mod commands {
+    use super::*;
+    use tauri::{async_runtime::Mutex, State};
+    use tempdir::TempDir;
+
+    #[tauri::command]
+    pub async fn open_db(
+        pool: State<'_, Mutex<Option<SqlitePool>>>,
+        path: String,
+    ) -> Result<(), String> {
+        let mut pool = pool.lock().await;
+        if let Some(cur_pool) = &*pool {
+            cur_pool.close().await;
+        }
+        *pool = Some(connect(&path).await.map_err(|e| e.to_string())?);
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn read_tierlist_from_db(
+        pool: State<'_, Mutex<Option<SqlitePool>>>,
+        tierlist: State<'_, Mutex<TierList>>,
+        thumb_dir: State<'_, TempDir>,
+    ) -> Result<(), String> {
+        let pool = pool.lock().await;
+        let mut tierlist = tierlist.lock().await;
+        if let Some(pool) = &*pool {
+            *tierlist = read_tierlist(pool, thumb_dir.path())
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(())
+        } else {
+            Err("DB not opened".to_owned())
+        }
+    }
+
+    #[tauri::command]
+    pub async fn write_tierlist_to_db(
+        pool: State<'_, Mutex<Option<SqlitePool>>>,
+        tierlist: State<'_, Mutex<TierList>>,
+        thumb_dir: State<'_, TempDir>,
+    ) -> Result<(), String> {
+        let pool = pool.lock().await;
+        let tierlist = tierlist.lock().await;
+        if let Some(pool) = &*pool {
+            write_tierlist(pool, thumb_dir.path(), &tierlist)
+                .await
+                .map_err(|e| e.to_string())
+        } else {
+            Err("DB not opened".to_owned())
+        }
+    }
+}
