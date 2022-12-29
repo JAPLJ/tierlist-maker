@@ -3,7 +3,7 @@ use scraper;
 use tempdir::TempDir;
 use tokio::fs;
 
-pub async fn get_amazon_img_url(url: &str) -> Result<String, String> {
+async fn get_amazon_img_url(url: &str) -> Result<String, String> {
     let selector = scraper::Selector::parse("img#ebooksImgBlkFront, img#imgBlkFront").unwrap();
     let body = reqwest::get(url)
         .await
