@@ -28,7 +28,7 @@ impl TierList {
     }
 
     // 新しいアイテムを全体集合に追加する
-    pub fn add_new_item(&mut self, name: String, url: String, thumb: Option<String>) {
+    pub fn add_new_item(&mut self, name: String, url: String, thumb: Option<String>) -> ItemId {
         let id: ItemId = self.item_max_id + 1;
         self.items.insert(
             id,
@@ -41,6 +41,7 @@ impl TierList {
         );
         self.add_item(id, None, self.items_pool.len());
         self.item_max_id = id;
+        id
     }
 
     // アイテムを完全に (全体集合からも) 削除する
@@ -85,7 +86,7 @@ impl TierList {
     }
 
     // 新しい tier を追加する
-    pub fn add_new_tier(&mut self, title: String, pos: usize) {
+    pub fn add_new_tier(&mut self, title: String, pos: usize) -> TierId {
         let id = self.tier_max_id + 1;
         self.tiers.insert(
             pos,
@@ -96,6 +97,7 @@ impl TierList {
             },
         );
         self.tier_max_id += 1;
+        id
     }
 
     // tier を削除する
@@ -141,9 +143,9 @@ pub mod commands {
         name: String,
         url: String,
         thumb: Option<String>,
-    ) {
+    ) -> ItemId {
         let mut tierlist = tierlist.lock().await;
-        tierlist.add_new_item(name, url, thumb);
+        tierlist.add_new_item(name, url, thumb)
     }
 
     #[tauri::command]
@@ -165,9 +167,13 @@ pub mod commands {
     }
 
     #[tauri::command]
-    pub async fn add_new_tier(tierlist: State<'_, Mutex<TierList>>, title: String, pos: usize) {
+    pub async fn add_new_tier(
+        tierlist: State<'_, Mutex<TierList>>,
+        title: String,
+        pos: usize,
+    ) -> TierId {
         let mut tierlist = tierlist.lock().await;
-        tierlist.add_new_tier(title, pos);
+        tierlist.add_new_tier(title, pos)
     }
 
     #[tauri::command]
@@ -180,5 +186,51 @@ pub mod commands {
     pub async fn move_tier(tierlist: State<'_, Mutex<TierList>>, id: TierId, pos: usize) {
         let mut tierlist = tierlist.lock().await;
         tierlist.move_tier(id, pos);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn tierlist_manip() {
+        let mut tierlist = TierList::empty();
+        assert!(tierlist.items.is_empty());
+
+        let id1 = tierlist.add_new_item("it1".to_owned(), "url1".to_owned(), None);
+        let id2 = tierlist.add_new_item("it2".to_owned(), "url2".to_owned(), None);
+        let id3 = tierlist.add_new_item("it3".to_owned(), "url3".to_owned(), None);
+        assert!(tierlist.items.contains_key(&id1));
+        assert!(tierlist.items.contains_key(&id2));
+        assert!(tierlist.items.contains_key(&id3));
+        assert_eq!(tierlist.items_pool, vec![id1, id2, id3]);
+
+        let tier1 = tierlist.add_new_tier("tier1".to_owned(), 0);
+        let tier2 = tierlist.add_new_tier("tier2".to_owned(), 1);
+        tierlist.remove_item(id1);
+        tierlist.add_item(id1, Some(tier1), 0);
+        tierlist.remove_item(id2);
+        tierlist.add_item(id2, Some(tier1), 0);
+        tierlist.remove_item(id3);
+        tierlist.add_item(id3, Some(tier2), 0);
+        assert!(tierlist.items_pool.is_empty());
+        assert_eq!(tierlist.tiers[0].items, vec![id2, id1]);
+        assert_eq!(tierlist.tiers[1].items, vec![id3]);
+
+        let tier3 = tierlist.add_new_tier("tier3".to_owned(), 1);
+        assert_eq!(tierlist.tiers[1].id, tier3);
+        assert_eq!(tierlist.tiers[2].id, tier2);
+
+        tierlist.delete_tier(tier2);
+        assert_eq!(tierlist.items_pool, vec![id3]);
+
+        tierlist.remove_item(id2);
+        tierlist.add_item(id2, None, 1);
+        assert_eq!(tierlist.items_pool, vec![id3, id2]);
+        assert_eq!(tierlist.tiers[0].items, vec![id1]);
+
+        tierlist.delete_item(id1);
+        assert!(tierlist.tiers[0].items.is_empty());
     }
 }
