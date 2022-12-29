@@ -1,0 +1,25 @@
+CREATE TABLE IF NOT EXISTS tierlist (
+    title TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tiers (
+    id INTEGER PRIMARY KEY NOT NULL,
+    pos INTEGER NOT NULL,
+    title TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS items (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    thumb NONE  -- blob
+);
+
+CREATE TABLE IF NOT EXISTS items_pos (
+    item_id INTEGER NOT NULL,
+    tier_id INTEGER NOT NULL,
+    pos INTEGER NOT NULL,
+    PRIMARY KEY (item_id, tier_id),
+    FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE,
+    FOREIGN KEY (tier_id) REFERENCES tiers (id) ON DELETE CASCADE
+);

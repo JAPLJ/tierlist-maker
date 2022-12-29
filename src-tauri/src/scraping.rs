@@ -88,9 +88,7 @@ mod tests {
     async fn dl_img() {
         let url = "https://www.amazon.co.jp/gp/product/B07N3NRSKF";
         let dir = TempDir::new("test").unwrap();
-        println!("{}", dir.path().display());
         let path = download_img(&dir, &url).await.unwrap();
-        println!("{}", path);
         assert!(fs::metadata(&path).await.is_ok())
     }
 }

@@ -2,17 +2,17 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-type TierId = i64;
-type ItemId = i64;
+pub type TierId = i64;
+pub type ItemId = i64;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TierList {
-    title: String,
-    tiers: Vec<Tier>,
-    tier_max_id: TierId,
-    items: HashMap<ItemId, Item>,
-    items_pool: Vec<ItemId>,
-    item_max_id: ItemId,
+    pub title: String,
+    pub tiers: Vec<Tier>,
+    pub tier_max_id: TierId,
+    pub items: HashMap<ItemId, Item>,
+    pub items_pool: Vec<ItemId>,
+    pub item_max_id: ItemId,
 }
 
 impl TierList {
@@ -119,17 +119,17 @@ impl TierList {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tier {
-    id: TierId,
-    title: String,
-    items: Vec<ItemId>,
+    pub id: TierId,
+    pub title: String,
+    pub items: Vec<ItemId>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Item {
-    id: ItemId,
-    name: String,
-    url: String,
-    thumb: Option<String>,
+    pub id: ItemId,
+    pub name: String,
+    pub url: String,
+    pub thumb: Option<String>,
 }
 
 pub mod commands {
