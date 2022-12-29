@@ -39,7 +39,7 @@ pub async fn connect(url: &str) -> DbResult<SqlitePool> {
     Ok(pool)
 }
 
-pub async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<TierList> {
+async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<TierList> {
     let mut tierlist = TierList::empty();
 
     const SQL_TITLE: &str = "SELECT * FROM tierlist";
@@ -112,11 +112,7 @@ pub async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<Tier
     Ok(tierlist)
 }
 
-pub async fn write_tierlist(
-    pool: &SqlitePool,
-    thumb_dir: &Path,
-    tierlist: &TierList,
-) -> DbResult<()> {
+async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> {
     sqlx::migrate!("./sql").run(pool).await?;
     let mut tx = pool.begin().await?;
 
@@ -139,8 +135,7 @@ pub async fn write_tierlist(
     let mut images = HashMap::new();
     for (_, item) in tierlist.items.iter() {
         if let Some(thumb_file) = &item.thumb {
-            let thumb_path = thumb_dir.join(thumb_file);
-            let mut thumb_file = File::open(thumb_path).await?;
+            let mut thumb_file = File::open(thumb_file).await?;
             let mut buf = vec![];
             thumb_file.read_to_end(&mut buf).await?;
             images.insert(item.id, buf);
@@ -214,16 +209,190 @@ pub mod commands {
     pub async fn write_tierlist_to_db(
         pool: State<'_, Mutex<Option<SqlitePool>>>,
         tierlist: State<'_, Mutex<TierList>>,
-        thumb_dir: State<'_, TempDir>,
     ) -> Result<(), String> {
         let pool = pool.lock().await;
         let tierlist = tierlist.lock().await;
         if let Some(pool) = &*pool {
-            write_tierlist(pool, thumb_dir.path(), &tierlist)
+            write_tierlist(pool, &tierlist)
                 .await
                 .map_err(|e| e.to_string())
         } else {
             Err("DB not opened".to_owned())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use tempdir::TempDir;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn read_tierlist_test() {
+        let dir = TempDir::new("db_test").unwrap();
+        let db_url = dir.path().join("test.db3").to_string_lossy().to_string();
+        let pool = connect(&db_url).await.unwrap();
+        sqlx::migrate!("./sql").run(&pool).await.unwrap();
+
+        let tierlist_title = "list";
+        const SQL_TIERLIST: &str = "INSERT INTO tierlist(title) VALUES (?)";
+        sqlx::query(SQL_TIERLIST)
+            .bind(tierlist_title)
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        let tiers = vec![(1, 0, "tier1"), (2, 1, "tier2"), (5, 2, "tier3")];
+        const SQL_TIERS: &str = "INSERT INTO tiers(id, pos, title) ";
+        let mut qbuilder: QueryBuilder<Sqlite> = QueryBuilder::new(SQL_TIERS);
+        qbuilder.push_values(tiers.iter(), |mut b, (id, pos, title)| {
+            b.push_bind(id).push_bind(pos).push_bind(*title);
+        });
+        qbuilder.build().execute(&pool).await.unwrap();
+
+        let items = vec![
+            (1, "item1", "url1", Some(vec![0u8, 1, 2])),
+            (2, "item2", "url2", None),
+            (3, "item3", "url3", Some(vec![3u8, 4, 5])),
+        ];
+        const SQL_ITEMS: &str = "INSERT INTO items(id, name, url, thumb) ";
+        let mut qbuilder: QueryBuilder<Sqlite> = QueryBuilder::new(SQL_ITEMS);
+        qbuilder.push_values(items.iter(), |mut b, (id, name, url, thumb)| {
+            b.push_bind(id)
+                .push_bind(*name)
+                .push_bind(*url)
+                .push_bind(thumb);
+        });
+        qbuilder.build().execute(&pool).await.unwrap();
+
+        let items_pos = vec![(1, 2, 1), (2, 2, 0)];
+        const SQL_POS: &str = "INSERT INTO items_pos(item_id, tier_id, pos) ";
+        let mut qbuilder: QueryBuilder<Sqlite> = QueryBuilder::new(SQL_POS);
+        qbuilder.push_values(items_pos.iter(), |mut b, (item_id, tier_id, pos)| {
+            b.push_bind(item_id).push_bind(tier_id).push_bind(pos);
+        });
+        qbuilder.build().execute(&pool).await.unwrap();
+
+        let thumb_dir = TempDir::new("test_thumb").unwrap();
+        let tierlist = read_tierlist(&pool, thumb_dir.path()).await.unwrap();
+
+        pool.close().await;
+
+        assert_eq!(tierlist.title, tierlist_title);
+        assert_eq!(tierlist.tiers.len(), 3);
+        assert!(tierlist.items.contains_key(&1));
+        assert!(tierlist.items.contains_key(&2));
+        assert!(tierlist.items.contains_key(&3));
+        assert_eq!(tierlist.items_pool, vec![3]);
+
+        let tier2 = &tierlist.tiers[1];
+        assert_eq!(tier2.id, 2);
+        assert_eq!(tier2.title, tiers[1].2);
+        assert_eq!(tier2.items, vec![2, 1]);
+
+        let item1 = tierlist.items.get(&1).unwrap();
+        assert_eq!(item1.id, 1);
+        assert_eq!(item1.name, "item1");
+        assert_eq!(item1.url, "url1");
+
+        let mut thumb1_file = File::open(item1.thumb.as_ref().unwrap()).await.unwrap();
+        let mut thumb1 = vec![];
+        thumb1_file.read_to_end(&mut thumb1).await.unwrap();
+        assert_eq!(thumb1, vec![0, 1, 2]);
+    }
+
+    #[tokio::test]
+    async fn write_tierlist_test() {
+        let img_dir = TempDir::new("test_thumb").unwrap();
+        let thumb1_path = img_dir.path().join("thumb1");
+        {
+            let mut thumb1_file = File::create(&thumb1_path).await.unwrap();
+            thumb1_file.write_all(&[0, 1, 2]).await.unwrap();
+        }
+
+        let tierlist = TierList {
+            title: "list".to_owned(),
+            tiers: vec![
+                Tier {
+                    id: 1,
+                    title: "tier1".to_owned(),
+                    items: vec![],
+                },
+                Tier {
+                    id: 2,
+                    title: "tier2".to_owned(),
+                    items: vec![2, 1],
+                },
+            ],
+            tier_max_id: 2,
+            items: HashMap::from([
+                (
+                    1,
+                    Item {
+                        id: 1,
+                        name: "item1".to_owned(),
+                        url: "url1".to_owned(),
+                        thumb: Some(thumb1_path.to_string_lossy().to_string()),
+                    },
+                ),
+                (
+                    2,
+                    Item {
+                        id: 2,
+                        name: "item2".to_owned(),
+                        url: "url2".to_owned(),
+                        thumb: None,
+                    },
+                ),
+                (
+                    3,
+                    Item {
+                        id: 3,
+                        name: "item3".to_owned(),
+                        url: "url3".to_owned(),
+                        thumb: None,
+                    },
+                ),
+            ]),
+            items_pool: vec![3],
+            item_max_id: 3,
+        };
+
+        let dir = TempDir::new("db_test").unwrap();
+        let db_url = dir.path().join("test.db3").to_string_lossy().to_string();
+        let pool = connect(&db_url).await.unwrap();
+        write_tierlist(&pool, &tierlist).await.unwrap();
+
+        assert_eq!(
+            sqlx::query("SELECT * FROM tierlist")
+                .fetch_one(&pool)
+                .await
+                .unwrap()
+                .get::<String, &str>("title"),
+            tierlist.title
+        );
+
+        let rows = sqlx::query("SELECT * FROM tiers ORDER BY id ASC")
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1].get::<String, &str>("title"), "tier2");
+
+        let rows = sqlx::query("SELECT * FROM items ORDER BY id ASC")
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+        assert_eq!(rows.len(), 3);
+        assert_eq!(rows[0].get::<Vec<u8>, &str>("thumb"), vec![0, 1, 2]);
+
+        let rows = sqlx::query("SELECT * FROM items_pos ORDER BY item_id ASC")
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1].get::<i64, &str>("tier_id"), 2);
+        assert_eq!(rows[1].get::<i64, &str>("pos"), 0);
     }
 }
