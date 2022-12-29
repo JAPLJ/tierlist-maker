@@ -143,15 +143,16 @@ pub mod commands {
         name: String,
         url: String,
         thumb: Option<String>,
-    ) -> ItemId {
+    ) -> Result<ItemId, ()> {
         let mut tierlist = tierlist.lock().await;
-        tierlist.add_new_item(name, url, thumb)
+        Ok(tierlist.add_new_item(name, url, thumb))
     }
 
     #[tauri::command]
-    pub async fn delete_item(tierlist: State<'_, Mutex<TierList>>, id: ItemId) {
+    pub async fn delete_item(tierlist: State<'_, Mutex<TierList>>, id: ItemId) -> Result<(), ()> {
         let mut tierlist = tierlist.lock().await;
         tierlist.delete_item(id);
+        Ok(())
     }
 
     #[tauri::command]
@@ -160,10 +161,11 @@ pub mod commands {
         id: ItemId,
         tier_id: Option<TierId>,
         pos: usize,
-    ) {
+    ) -> Result<(), ()> {
         let mut tierlist = tierlist.lock().await;
         tierlist.remove_item(id);
         tierlist.add_item(id, tier_id, pos);
+        Ok(())
     }
 
     #[tauri::command]
@@ -171,21 +173,27 @@ pub mod commands {
         tierlist: State<'_, Mutex<TierList>>,
         title: String,
         pos: usize,
-    ) -> TierId {
+    ) -> Result<TierId, ()> {
         let mut tierlist = tierlist.lock().await;
-        tierlist.add_new_tier(title, pos)
+        Ok(tierlist.add_new_tier(title, pos))
     }
 
     #[tauri::command]
-    pub async fn delete_tier(tierlist: State<'_, Mutex<TierList>>, id: TierId) {
+    pub async fn delete_tier(tierlist: State<'_, Mutex<TierList>>, id: TierId) -> Result<(), ()> {
         let mut tierlist = tierlist.lock().await;
         tierlist.delete_tier(id);
+        Ok(())
     }
 
     #[tauri::command]
-    pub async fn move_tier(tierlist: State<'_, Mutex<TierList>>, id: TierId, pos: usize) {
+    pub async fn move_tier(
+        tierlist: State<'_, Mutex<TierList>>,
+        id: TierId,
+        pos: usize,
+    ) -> Result<(), ()> {
         let mut tierlist = tierlist.lock().await;
         tierlist.move_tier(id, pos);
+        Ok(())
     }
 }
 
