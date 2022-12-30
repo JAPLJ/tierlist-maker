@@ -1,0 +1,29 @@
+#tierlist-pane {
+  height: 95vh;
+  overflow-y: scroll;
+}
+
+#tierlist {
+  background-color: black;
+}
+
+.tier-container {
+  display: flex;
+  justify-content: left;
+  background-color: #1a1a17;
+  margin-top: 2px;
+}
+
+.tier-title-box {
+  margin: 2px;
+  background-color: lightgreen;
+  flex: 0 0 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tier-title {
+  font-weight: bold;
+  font-size: 1.5em;
+}
