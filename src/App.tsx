@@ -93,7 +93,6 @@ const App: React.FC = (_) => {
       const overId = over?.id ?? null;
       const activeList = findContainingList(activeId);
       const overList = findContainingList(overId);
-
       if (!activeList || !overList || activeList.id === overList.id) {
         return;
       }

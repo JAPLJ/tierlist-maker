@@ -52,7 +52,7 @@ const TierContainer: React.FC<{
         items={props.items}
         strategy={rectSortingStrategy}
       >
-        <div ref={setNodeRef}>
+        <div ref={setNodeRef} style={{ width: "100%" }}>
           <List
             component={Stack}
             direction="row"
@@ -86,7 +86,7 @@ const Tierlist: React.FC<{
             activeId={props.activeId}
           />
         ))}
-      </div>{" "}
+      </div>
     </div>
   );
 };
