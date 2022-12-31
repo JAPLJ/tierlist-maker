@@ -13,12 +13,18 @@ import { ItemData } from "./TierlistData";
 
 const DialogAddNew: React.FC<{
   open: boolean;
-  onClose: (itemData: ItemData) => void;
+  onClose: (itemData: ItemData | null) => void;
 }> = (props) => {
-  const handleOk = () => {
+  const clearForm = () => {
     setAmazonUrl("");
     setProductName("");
     setImagePath("");
+  };
+  const handleCancel = () => {
+    props.onClose(null);
+  };
+  const handleOk = () => {
+    clearForm();
     props.onClose({ url: amazonUrl, name: productName, thumb: imagePath });
   };
 
@@ -26,6 +32,7 @@ const DialogAddNew: React.FC<{
   const [productName, setProductName] = useState("");
   const [imagePath, setImagePath] = useState("");
   const [nowLoading, setNowLoading] = useState(false);
+  const [successfullyLoaded, setSuccessfullyLoaded] = useState(false);
 
   async function getProductInfo(amazonUrl: string) {
     setNowLoading(true);
@@ -39,6 +46,7 @@ const DialogAddNew: React.FC<{
     setNowLoading(false);
     setProductName(title);
     setImagePath(imgPath);
+    setSuccessfullyLoaded(imgPath !== "");
   }
 
   return (
@@ -72,7 +80,14 @@ const DialogAddNew: React.FC<{
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleOk}>Add</Button>
+        <Button onClick={handleCancel}>Cancel</Button>
+        <Button
+          variant="contained"
+          onClick={handleOk}
+          disabled={!successfullyLoaded}
+        >
+          Add
+        </Button>
       </DialogActions>
     </Dialog>
   );
