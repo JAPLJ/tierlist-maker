@@ -2,3 +2,8 @@
   height: 95vh;
   overflow-y: scroll;
 }
+
+#pool .highlight {
+  font-weight: 900;
+  color: crimson;
+}

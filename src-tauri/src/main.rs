@@ -6,7 +6,7 @@
 use sqlx::SqlitePool;
 use tauri::{async_runtime::Mutex, Manager};
 use tempdir::TempDir;
-use tierlist_maker::{db, tierlist};
+use tierlist_maker::{db, scraping, tierlist};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let img_tmp_dir = TempDir::new("imgs")?;
@@ -23,6 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             db::commands::open_db,
             db::commands::read_tierlist_from_db,
             db::commands::write_tierlist_to_db,
+            scraping::commands::scrape_amazon,
         ])
         .setup(|app| {
             app.manage(img_tmp_dir);

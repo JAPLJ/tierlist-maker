@@ -12,15 +12,17 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import "@fontsource/noto-sans-jp/500.css";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import { Card, CardMedia } from "@mui/material";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 import Grid from "@mui/material/Unstable_Grid2";
-import { invoke } from "@tauri-apps/api/tauri";
+import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
@@ -38,11 +40,17 @@ const Pane = styled(Paper)(({ theme }) => ({
 
 const OverlayItem: React.FC<{ item: Item | null }> = (props) => {
   return props.item ? (
-    <Paper elevation={12} style={{ textAlign: "center" }}>
-      IMG
-      <br />
-      {props.item.id}
-    </Paper>
+    <Card
+      elevation={12}
+      square
+      sx={{ display: "flex", alignItems: "center", width: 60, opacity: 0.66 }}
+    >
+      <CardMedia
+        component="img"
+        sx={{ width: 60 }}
+        image={props.item.thumb ?? undefined}
+      />
+    </Card>
   ) : null;
 };
 
@@ -86,6 +94,14 @@ const App: React.FC = (_) => {
       )
     ),
   ]);
+
+  const handleAddNewItem = (item: Item) => {
+    setPool((prev) => {
+      // TODO: convertFileSrc / test images
+      prev.items.push({ ...item, thumb: convertFileSrc(item.thumb ?? "") });
+      return prev;
+    });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -218,13 +234,17 @@ const App: React.FC = (_) => {
           </Grid>
           <Grid xs={4}>
             <Pane>
-              <Pool items={pool.items} activeId={activeId} />
+              <Pool
+                items={pool.items}
+                activeId={activeId}
+                onAddNewItem={handleAddNewItem}
+              />
             </Pane>
           </Grid>
         </Grid>
       </Box>
       {createPortal(
-        <DragOverlay dropAnimation={null} style={{ width: 100 }}>
+        <DragOverlay dropAnimation={null}>
           {activeId ? <OverlayItem item={findItemById(activeId)} /> : null}
         </DragOverlay>,
         document.body

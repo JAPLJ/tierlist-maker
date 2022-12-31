@@ -12,6 +12,12 @@ export class Item {
   }
 }
 
+export interface ItemData {
+  name: string;
+  url: string;
+  thumb: string | null;
+}
+
 export class ItemPool {
   id: string;
   items: Item[];
