@@ -5,7 +5,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { List, ListItem, ListItemText, Stack } from "@mui/material";
+import { List, ListItem, Stack } from "@mui/material";
 import "./Tierlist.css";
 import { Item, Tier } from "./TierlistData";
 
@@ -21,13 +21,12 @@ const TierItem: React.FC<{ item: Item; isActive: boolean }> = (props) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <ListItem
-        disablePadding
-        style={{ backgroundColor: "#fff", textAlign: "center" }}
-      >
-        <ListItemText
-          primary={`[${props.item.id}]`}
-          secondary={`${props.item.name}`}
+      <ListItem disablePadding>
+        <img
+          src={`${props.item.thumb}`}
+          width="80px"
+          alt={props.item.name}
+          loading="lazy"
         />
       </ListItem>
     </div>
@@ -54,6 +53,7 @@ const TierContainer: React.FC<{
       >
         <div ref={setNodeRef} style={{ width: "100%" }}>
           <List
+            disablePadding
             component={Stack}
             direction="row"
             sx={{ flexWrap: "wrap", gap: 0 }}

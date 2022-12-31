@@ -55,12 +55,16 @@ const App: React.FC = (_) => {
     setGreetMsg(await invoke("greet", { name }));
   }
 
+  function tmpImgSrc(k: number): string {
+    return `test${(k % 3) + 1}.png`;
+  }
+
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [listTitle, setListTitle] = useState<string>("Untitled Tierlist");
   const [pool, setPool] = useState<ItemPool>(
     new ItemPool(
       Array.from({ length: 20 }, (_, k) => k).map(
-        (k) => new Item(k + 1, `name-${k + 1}`, `url-${k + 1}`, null)
+        (k) => new Item(k + 1, `name-${k + 1}`, `url-${k + 1}`, tmpImgSrc(k))
       )
     )
   );
@@ -69,14 +73,16 @@ const App: React.FC = (_) => {
       1,
       "tier1",
       Array.from({ length: 15 }, (_, k) => k).map(
-        (k) => new Item(100 + k, `name-${100 + k}`, `url-${100 + k}`, null)
+        (k) =>
+          new Item(100 + k, `name-${100 + k}`, `url-${100 + k}`, tmpImgSrc(k))
       )
     ),
     new Tier(
       2,
       "tier2",
       Array.from({ length: 5 }, (_, k) => k).map(
-        (k) => new Item(200 + k, `name-${200 + k}`, `url-${200 + k}`, null)
+        (k) =>
+          new Item(200 + k, `name-${200 + k}`, `url-${200 + k}`, tmpImgSrc(k))
       )
     ),
   ]);
