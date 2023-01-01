@@ -105,6 +105,12 @@ const App: React.FC = (_) => {
     });
   };
 
+  const handleDeleteItem = (id: number) => {
+    setPool((prev) => {
+      return { ...prev, items: prev.items.filter((it) => it.id !== id) };
+    });
+  };
+
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -240,6 +246,7 @@ const App: React.FC = (_) => {
                 items={pool.items}
                 activeId={activeId}
                 onAddNewItem={handleAddNewItem}
+                onDeleteItem={handleDeleteItem}
               />
             </Pane>
           </Grid>

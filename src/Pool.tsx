@@ -19,6 +19,7 @@ import {
 import { useEffect, useState } from "react";
 import Highlighter from "react-highlight-words";
 import DialogAddNew from "./DialogAddNew";
+import DialogDeleteItem from "./DialogDeleteItem";
 import "./Pool.css";
 import { Item, ItemData } from "./TierlistData";
 
@@ -26,6 +27,7 @@ const PoolItem: React.FC<{
   item: Item;
   isActive: boolean;
   highlight: string;
+  onDeleteButtonClick: (item: Item) => void;
 }> = (props) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: props.item.id, transition: null });
@@ -61,7 +63,11 @@ const PoolItem: React.FC<{
         <IconButton sx={{ position: "aboslute", right: 0, top: 0 }} data-no-dnd>
           <EditOutlined color="primary" />
         </IconButton>
-        <IconButton sx={{ position: "aboslute", right: 0, top: 0 }} data-no-dnd>
+        <IconButton
+          sx={{ position: "aboslute", right: 0, top: 0 }}
+          data-no-dnd
+          onClick={() => props.onDeleteButtonClick(props.item)}
+        >
           <DeleteOutlined color="primary" />
         </IconButton>
       </ListItemButton>
@@ -73,6 +79,7 @@ const Pool: React.FC<{
   items: Item[];
   activeId: UniqueIdentifier | null;
   onAddNewItem: (item: Item) => void;
+  onDeleteItem: (id: number) => void;
 }> = (props) => {
   const { setNodeRef } = useDroppable({ id: "pool" });
 
@@ -107,6 +114,19 @@ const Pool: React.FC<{
     setAddNewDialogOpen(false);
   };
 
+  const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
+  const [deleteItemDialogOpen, setDeleteItemDialogOpen] = useState(false);
+  const handleItemDeleteButtonClick = (item: Item) => {
+    setItemToDelete(item);
+    setDeleteItemDialogOpen(true);
+  };
+  const handleDeleteDialogClose = (agree: boolean, item: Item) => {
+    if (agree) {
+      props.onDeleteItem(item.id);
+    }
+    setDeleteItemDialogOpen(false);
+  };
+
   return (
     <div ref={setNodeRef} id="pool">
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -133,13 +153,20 @@ const Pool: React.FC<{
         <List>
           {filteredItems.map((item) => (
             <PoolItem
+              key={item.id}
               item={item}
               isActive={item.id === props.activeId}
               highlight={searchText.trim()}
+              onDeleteButtonClick={handleItemDeleteButtonClick}
             />
           ))}
         </List>
       </SortableContext>
+      <DialogDeleteItem
+        open={deleteItemDialogOpen}
+        item={itemToDelete!}
+        onClose={handleDeleteDialogClose}
+      />
     </div>
   );
 };
