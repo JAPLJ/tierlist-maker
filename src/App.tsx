@@ -98,6 +98,15 @@ const App: React.FC = (_) => {
     ),
   ]);
 
+  // TODO: new tier id
+  const [tmpNewTierId, setTmpNewTierId] = useState(10000);
+  const handleTierAdd = () => {
+    setTiers((prev) => {
+      return [...prev, new Tier(tmpNewTierId, "Untitled Tier", [])];
+    });
+    setTmpNewTierId(tmpNewTierId + 1);
+  };
+
   const handleTierMove = (id: string, direction: "up" | "down") => {
     const tierIdx = tiers.findIndex((t) => t.id === id);
     const nextIdx = tierIdx + (direction === "up" ? -1 : +1);
@@ -274,6 +283,7 @@ const App: React.FC = (_) => {
                 title={listTitle}
                 tiers={tiers}
                 activeId={activeId}
+                onTierAdd={handleTierAdd}
                 onTierMove={handleTierMove}
               />
             </Pane>

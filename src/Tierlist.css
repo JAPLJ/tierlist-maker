@@ -5,6 +5,7 @@
 
 #tierlist {
   background-color: black;
+  margin-bottom: 1em;
 }
 
 .tier-container {
@@ -15,7 +16,6 @@
 }
 
 .tier-title-box {
-  margin: 2px;
   background-color: lightgreen;
   flex: 0 0 100px;
   display: flex;

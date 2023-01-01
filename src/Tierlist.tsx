@@ -5,8 +5,12 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MoveDownOutlined, MoveUpOutlined } from "@mui/icons-material";
-import { IconButton, List, ListItem, Stack } from "@mui/material";
+import {
+  AddCircleOutline,
+  MoveDownOutlined,
+  MoveUpOutlined,
+} from "@mui/icons-material";
+import { Button, IconButton, List, ListItem, Stack } from "@mui/material";
 import { useState } from "react";
 import { fileSrc } from "./FileSrcUtil";
 import "./Tierlist.css";
@@ -104,6 +108,7 @@ const Tierlist: React.FC<{
   tiers: Tier[];
   activeId: UniqueIdentifier | null;
   onTierMove: (id: string, direction: "up" | "down") => void;
+  onTierAdd: () => void;
 }> = (props) => {
   console.log("tierlist rendering");
   return (
@@ -121,6 +126,13 @@ const Tierlist: React.FC<{
           />
         ))}
       </div>
+      <Button
+        variant="outlined"
+        startIcon={<AddCircleOutline />}
+        onClick={() => props.onTierAdd()}
+      >
+        Add Tier
+      </Button>
     </div>
   );
 };
