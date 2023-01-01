@@ -23,7 +23,7 @@ import {
   Unstable_Grid2 as Grid,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/tauri";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
@@ -99,8 +99,7 @@ const App: React.FC = (_) => {
 
   const handleAddNewItem = (item: Item) => {
     setPool((prev) => {
-      // TODO: convertFileSrc / test images
-      prev.items.push({ ...item, thumb: convertFileSrc(item.thumb ?? "") });
+      prev.items.push({ ...item, thumb: item.thumb ?? "" });
       return prev;
     });
   };
@@ -108,6 +107,21 @@ const App: React.FC = (_) => {
   const handleDeleteItem = (id: number) => {
     setPool((prev) => {
       return { ...prev, items: prev.items.filter((it) => it.id !== id) };
+    });
+  };
+
+  const handleEditItem = (item: Item) => {
+    setPool((prev) => {
+      return {
+        ...prev,
+        items: prev.items.map((it) => {
+          if (it.id === item.id) {
+            return item;
+          } else {
+            return it;
+          }
+        }),
+      };
     });
   };
 
@@ -247,6 +261,7 @@ const App: React.FC = (_) => {
                 activeId={activeId}
                 onAddNewItem={handleAddNewItem}
                 onDeleteItem={handleDeleteItem}
+                onEditItem={handleEditItem}
               />
             </Pane>
           </Grid>

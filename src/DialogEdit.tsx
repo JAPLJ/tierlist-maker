@@ -1,24 +1,23 @@
 import { Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DialogItemView from "./DialogItemView";
-import { ItemData } from "./TierlistData";
+import { Item, ItemData } from "./TierlistData";
 
-const DialogAddNew: React.FC<{
+const DialogEdit: React.FC<{
   open: boolean;
-  onClose: (itemData: ItemData | null) => void;
+  item: Item | null;
+  onClose: (update: boolean, item: Item) => void;
 }> = (props) => {
-  const clearForm = () => {
-    setAmazonUrl("");
-    setProductName("");
-    setImagePath("");
-  };
   const handleCancel = () => {
-    clearForm();
-    props.onClose(null);
+    props.onClose(false, props.item!);
   };
   const handleOk = () => {
-    clearForm();
-    props.onClose({ url: amazonUrl, name: productName, thumb: imagePath });
+    props.onClose(true, {
+      id: props.item!.id,
+      url: amazonUrl,
+      name: productName,
+      thumb: imagePath,
+    });
   };
 
   const onChange = (itemData: ItemData) => {
@@ -33,9 +32,13 @@ const DialogAddNew: React.FC<{
   const [imagePath, setImagePath] = useState("");
   const [successfullyLoaded, setSuccessfullyLoaded] = useState(false);
 
+  useEffect(() => {
+    onChange(props.item ?? { url: "", name: "", thumb: "" });
+  }, [props.item]);
+
   return (
     <Dialog open={props.open} keepMounted fullWidth maxWidth="md">
-      <DialogTitle>Add New Item</DialogTitle>
+      <DialogTitle>Edit Item</DialogTitle>
       <DialogItemView
         itemData={{ name: productName, url: amazonUrl, thumb: imagePath }}
         onChange={onChange}
@@ -47,11 +50,11 @@ const DialogAddNew: React.FC<{
           onClick={handleOk}
           disabled={!successfullyLoaded}
         >
-          Add
+          Update
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default DialogAddNew;
+export default DialogEdit;

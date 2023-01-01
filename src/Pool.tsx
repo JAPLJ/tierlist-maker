@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import Highlighter from "react-highlight-words";
 import DialogAddNew from "./DialogAddNew";
 import DialogDeleteItem from "./DialogDeleteItem";
+import DialogEdit from "./DialogEdit";
 import "./Pool.css";
 import { Item, ItemData } from "./TierlistData";
 
@@ -27,6 +28,7 @@ const PoolItem: React.FC<{
   item: Item;
   isActive: boolean;
   highlight: string;
+  onEditButtonClick: (item: Item) => void;
   onDeleteButtonClick: (item: Item) => void;
 }> = (props) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -60,7 +62,11 @@ const PoolItem: React.FC<{
             textToHighlight={props.item.name}
           />
         </ListItemText>
-        <IconButton sx={{ position: "aboslute", right: 0, top: 0 }} data-no-dnd>
+        <IconButton
+          sx={{ position: "aboslute", right: 0, top: 0 }}
+          data-no-dnd
+          onClick={() => props.onEditButtonClick(props.item)}
+        >
           <EditOutlined color="primary" />
         </IconButton>
         <IconButton
@@ -80,6 +86,7 @@ const Pool: React.FC<{
   activeId: UniqueIdentifier | null;
   onAddNewItem: (item: Item) => void;
   onDeleteItem: (id: number) => void;
+  onEditItem: (item: Item) => void;
 }> = (props) => {
   const { setNodeRef } = useDroppable({ id: "pool" });
 
@@ -127,6 +134,20 @@ const Pool: React.FC<{
     setDeleteItemDialogOpen(false);
   };
 
+  const [itemToEdit, setItemToEdit] = useState<Item | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const handleItemEditButtonClick = (item: Item) => {
+    setItemToEdit(item);
+    setEditDialogOpen(true);
+  };
+  const handleEditDialogClose = (update: boolean, item: Item) => {
+    if (update) {
+      console.log(item.thumb);
+      props.onEditItem(item);
+    }
+    setEditDialogOpen(false);
+  };
+
   return (
     <div ref={setNodeRef} id="pool">
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -157,6 +178,7 @@ const Pool: React.FC<{
               item={item}
               isActive={item.id === props.activeId}
               highlight={searchText.trim()}
+              onEditButtonClick={handleItemEditButtonClick}
               onDeleteButtonClick={handleItemDeleteButtonClick}
             />
           ))}
@@ -166,6 +188,11 @@ const Pool: React.FC<{
         open={deleteItemDialogOpen}
         item={itemToDelete!}
         onClose={handleDeleteDialogClose}
+      />
+      <DialogEdit
+        open={editDialogOpen}
+        item={itemToEdit}
+        onClose={handleEditDialogClose}
       />
     </div>
   );
