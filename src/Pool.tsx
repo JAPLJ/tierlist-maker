@@ -7,8 +7,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import {
+  Avatar,
   IconButton,
   List,
+  ListItemAvatar,
   ListItemButton,
   ListItemText,
   TextField,
@@ -36,6 +38,16 @@ const PoolItem: React.FC<{
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <ListItemButton>
+        {props.item.thumb ? (
+          <ListItemAvatar>
+            <Avatar
+              variant="square"
+              // TODO: convertFileSrc
+              src={props.item.thumb}
+              alt="p"
+            />
+          </ListItemAvatar>
+        ) : null}
         <ListItemText>
           <Highlighter
             highlightClassName="highlight"
