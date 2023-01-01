@@ -120,6 +120,20 @@ const App: React.FC = (_) => {
     }
   };
 
+  const handleTierDelete = (id: string) => {
+    setPool((prev) => {
+      const tier = tiers.find((t) => t.id === id);
+      if (!tier) {
+        return prev;
+      } else {
+        return { ...prev, items: [...prev.items, ...tier.items] };
+      }
+    });
+    setTiers((prev) => {
+      return prev.filter((t) => t.id !== id);
+    });
+  };
+
   const handleAddNewItem = (item: Item) => {
     setPool((prev) => {
       return {
@@ -285,6 +299,7 @@ const App: React.FC = (_) => {
                 activeId={activeId}
                 onTierAdd={handleTierAdd}
                 onTierMove={handleTierMove}
+                onTierDelete={handleTierDelete}
               />
             </Pane>
           </Grid>

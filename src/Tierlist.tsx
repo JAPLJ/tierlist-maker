@@ -7,11 +7,13 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   AddCircleOutline,
+  DeleteOutlined,
   MoveDownOutlined,
   MoveUpOutlined,
 } from "@mui/icons-material";
 import { Button, IconButton, List, ListItem, Stack } from "@mui/material";
 import { useState } from "react";
+import DialogDeleteTier from "./DialogDeleteTier";
 import { fileSrc } from "./FileSrcUtil";
 import "./Tierlist.css";
 import { Item, Tier } from "./TierlistData";
@@ -46,6 +48,7 @@ const TierContainer: React.FC<{
   items: Item[];
   activeId: UniqueIdentifier | null;
   onTierMove: (id: string, direction: "up" | "down") => void;
+  onTierDelete: (id: string) => void;
 }> = (props) => {
   const { setNodeRef } = useDroppable({ id: props.id });
 
@@ -73,6 +76,14 @@ const TierContainer: React.FC<{
             onClick={() => props.onTierMove(props.id, "down")}
           >
             <MoveDownOutlined color="primary" />
+          </IconButton>
+        ) : null}
+        {isHovering ? (
+          <IconButton
+            sx={{ position: "absolute", top: 0, right: 0 }}
+            onClick={() => props.onTierDelete(props.id)}
+          >
+            <DeleteOutlined color="primary" />
           </IconButton>
         ) : null}
       </div>
@@ -109,8 +120,22 @@ const Tierlist: React.FC<{
   activeId: UniqueIdentifier | null;
   onTierMove: (id: string, direction: "up" | "down") => void;
   onTierAdd: () => void;
+  onTierDelete: (id: string) => void;
 }> = (props) => {
-  console.log("tierlist rendering");
+  const [deleteTierDialogOpen, setDeleteTierDialogOpen] = useState(false);
+  const [tierIdToDelete, setTierIdToDelete] = useState("");
+
+  const openDeleteTierDialog = (id: string) => {
+    setTierIdToDelete(id);
+    setDeleteTierDialogOpen(true);
+  };
+  const handleDeleteTierDialogClose = (agree: boolean, tierId: string) => {
+    if (agree) {
+      props.onTierDelete(tierId);
+    }
+    setDeleteTierDialogOpen(false);
+  };
+
   return (
     <div id="tierlist-pane">
       <h2>{props.title}</h2>
@@ -123,6 +148,7 @@ const Tierlist: React.FC<{
             items={tier.items}
             activeId={props.activeId}
             onTierMove={props.onTierMove}
+            onTierDelete={(id) => openDeleteTierDialog(id)}
           />
         ))}
       </div>
@@ -133,6 +159,11 @@ const Tierlist: React.FC<{
       >
         Add Tier
       </Button>
+      <DialogDeleteTier
+        open={deleteTierDialogOpen}
+        id={tierIdToDelete}
+        onClose={handleDeleteTierDialogClose}
+      />
     </div>
   );
 };
