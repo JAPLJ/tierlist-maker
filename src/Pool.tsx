@@ -5,6 +5,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DeleteOutlined } from "@mui/icons-material";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import {
   Avatar,
@@ -57,6 +58,9 @@ const PoolItem: React.FC<{
             textToHighlight={props.item.name}
           />
         </ListItemText>
+        <IconButton sx={{ position: "aboslute", right: 0, top: 0 }} data-no-dnd>
+          <DeleteOutlined color="primary" />
+        </IconButton>
       </ListItemButton>
     </div>
   );

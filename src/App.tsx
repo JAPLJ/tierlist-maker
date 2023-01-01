@@ -4,8 +4,6 @@ import {
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
-  KeyboardSensor,
-  PointerSensor,
   rectIntersection,
   UniqueIdentifier,
   useSensor,
@@ -29,6 +27,7 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
+import { KeyboardSensor, MouseSensor } from "./CustomSensor";
 import Pool from "./Pool";
 import Tierlist from "./Tierlist";
 import { Item, ItemList, ItemPool, Tier } from "./TierlistData";
@@ -107,7 +106,7 @@ const App: React.FC = (_) => {
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(MouseSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
