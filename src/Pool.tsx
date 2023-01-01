@@ -21,6 +21,7 @@ import Highlighter from "react-highlight-words";
 import DialogAddNew from "./DialogAddNew";
 import DialogDeleteItem from "./DialogDeleteItem";
 import DialogEdit from "./DialogEdit";
+import { fileSrc } from "./FileSrcUtil";
 import "./Pool.css";
 import { Item, ItemData } from "./TierlistData";
 
@@ -45,12 +46,7 @@ const PoolItem: React.FC<{
       <ListItemButton>
         {props.item.thumb ? (
           <ListItemAvatar>
-            <Avatar
-              variant="square"
-              // TODO: convertFileSrc
-              src={props.item.thumb}
-              alt="p"
-            />
+            <Avatar variant="square" src={fileSrc(props.item.thumb)} alt="p" />
           </ListItemAvatar>
         ) : null}
         <ListItemText>

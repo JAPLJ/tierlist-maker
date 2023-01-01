@@ -28,6 +28,7 @@ import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
 import { KeyboardSensor, MouseSensor } from "./CustomSensor";
+import { fileSrc } from "./FileSrcUtil";
 import Pool from "./Pool";
 import Tierlist from "./Tierlist";
 import { Item, ItemList, ItemPool, Tier } from "./TierlistData";
@@ -50,7 +51,7 @@ const OverlayItem: React.FC<{ item: Item | null }> = (props) => {
       <CardMedia
         component="img"
         sx={{ width: 60 }}
-        image={props.item.thumb ?? undefined}
+        image={fileSrc(props.item.thumb ?? "")}
       />
     </Card>
   ) : null;
