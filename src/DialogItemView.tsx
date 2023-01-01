@@ -6,9 +6,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/tauri";
 import { useState } from "react";
 import { Radio, TailSpin } from "react-loader-spinner";
+import { fileSrc } from "./FileSrcUtil";
 import { ItemData } from "./TierlistData";
 
 const DialogItemView: React.FC<{
@@ -84,7 +85,7 @@ const DialogItemView: React.FC<{
           <Box display="flex" justifyContent="center">
             <Box
               component="img"
-              src={convertFileSrc(imagePath!)}
+              src={fileSrc(imagePath!)}
               sx={{ width: 244 }}
             ></Box>
           </Box>

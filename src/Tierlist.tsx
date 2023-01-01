@@ -5,7 +5,9 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { List, ListItem, Stack } from "@mui/material";
+import { MoveDownOutlined, MoveUpOutlined } from "@mui/icons-material";
+import { IconButton, List, ListItem, Stack } from "@mui/material";
+import { useState } from "react";
 import { fileSrc } from "./FileSrcUtil";
 import "./Tierlist.css";
 import { Item, Tier } from "./TierlistData";
@@ -39,13 +41,36 @@ const TierContainer: React.FC<{
   title: string;
   items: Item[];
   activeId: UniqueIdentifier | null;
+  onTierMove: (id: string, direction: "up" | "down") => void;
 }> = (props) => {
   const { setNodeRef } = useDroppable({ id: props.id });
 
+  const [isHovering, setIsHovering] = useState(false);
+
   return (
     <div className="tier-container">
-      <div className="tier-title-box">
+      <div
+        className="tier-title-box"
+        onMouseOver={() => setIsHovering(true)}
+        onMouseOut={() => setIsHovering(false)}
+      >
         <span className="tier-title">{props.title}</span>
+        {isHovering ? (
+          <IconButton
+            sx={{ position: "absolute", top: 0, left: 0 }}
+            onClick={() => props.onTierMove(props.id, "up")}
+          >
+            <MoveUpOutlined color="primary" />
+          </IconButton>
+        ) : null}
+        {isHovering ? (
+          <IconButton
+            sx={{ position: "absolute", bottom: 0, left: 0 }}
+            onClick={() => props.onTierMove(props.id, "down")}
+          >
+            <MoveDownOutlined color="primary" />
+          </IconButton>
+        ) : null}
       </div>
       <SortableContext
         id={props.id}
@@ -61,7 +86,11 @@ const TierContainer: React.FC<{
             spacing={0}
           >
             {props.items.map((item) => (
-              <TierItem item={item} isActive={item.id === props.activeId} />
+              <TierItem
+                item={item}
+                key={`in_t_${item.id}`}
+                isActive={item.id === props.activeId}
+              />
             ))}
           </List>
         </div>
@@ -74,7 +103,9 @@ const Tierlist: React.FC<{
   title: string;
   tiers: Tier[];
   activeId: UniqueIdentifier | null;
+  onTierMove: (id: string, direction: "up" | "down") => void;
 }> = (props) => {
+  console.log("tierlist rendering");
   return (
     <div id="tierlist-pane">
       <h2>{props.title}</h2>
@@ -82,9 +113,11 @@ const Tierlist: React.FC<{
         {props.tiers.map((tier) => (
           <TierContainer
             id={tier.id}
+            key={tier.id}
             title={tier.title}
             items={tier.items}
             activeId={props.activeId}
+            onTierMove={props.onTierMove}
           />
         ))}
       </div>

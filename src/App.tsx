@@ -74,7 +74,7 @@ const App: React.FC = (_) => {
   const [listTitle, setListTitle] = useState<string>("Untitled Tierlist");
   const [pool, setPool] = useState<ItemPool>(
     new ItemPool(
-      Array.from({ length: 20 }, (_, k) => k).map(
+      Array.from({ length: 5 }, (_, k) => k).map(
         (k) => new Item(k + 1, `name-${k + 1}`, `url-${k + 1}`, tmpImgSrc(k))
       )
     )
@@ -98,10 +98,25 @@ const App: React.FC = (_) => {
     ),
   ]);
 
+  const handleTierMove = (id: string, direction: "up" | "down") => {
+    const tierIdx = tiers.findIndex((t) => t.id === id);
+    const nextIdx = tierIdx + (direction === "up" ? -1 : +1);
+    console.log(`tier move: ${id}, ${direction}, ${tierIdx}, ${nextIdx}`);
+    if (0 <= nextIdx && nextIdx < tiers.length) {
+      setTiers((prev) => {
+        let ts = [...prev];
+        [ts[tierIdx], ts[nextIdx]] = [ts[nextIdx], ts[tierIdx]];
+        return ts;
+      });
+    }
+  };
+
   const handleAddNewItem = (item: Item) => {
     setPool((prev) => {
-      prev.items.push({ ...item, thumb: item.thumb ?? "" });
-      return prev;
+      return {
+        ...prev,
+        items: [...prev.items, { ...item, thumb: item.thumb ?? "" }],
+      };
     });
   };
 
@@ -153,6 +168,7 @@ const App: React.FC = (_) => {
         }
       })();
 
+      console.log("handleDragOver");
       setPool((prev) => {
         if (activeList.id === "pool") {
           return {
@@ -215,6 +231,7 @@ const App: React.FC = (_) => {
       const overIdx = overList.items.findIndex((it) => it.id == overId);
       if (activeIdx !== overIdx) {
         if (activeList.id === "pool") {
+          console.log("handleDragEnd: pool");
           setPool((prev) => {
             return {
               id: prev.id,
@@ -222,6 +239,7 @@ const App: React.FC = (_) => {
             };
           });
         } else {
+          console.log("handleDragEnd: tier");
           setTiers((prev) => {
             return prev.map((t) => {
               if (t.id === activeList.id) {
@@ -252,7 +270,12 @@ const App: React.FC = (_) => {
         <Grid container spacing={1}>
           <Grid xs={8}>
             <Pane>
-              <Tierlist title={listTitle} tiers={tiers} activeId={activeId} />
+              <Tierlist
+                title={listTitle}
+                tiers={tiers}
+                activeId={activeId}
+                onTierMove={handleTierMove}
+              />
             </Pane>
           </Grid>
           <Grid xs={4}>
