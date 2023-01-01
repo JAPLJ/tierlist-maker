@@ -228,7 +228,7 @@ const App: React.FC = (_) => {
       onDragOver={handleDragOver}
     >
       <Box sx={{ flexGrow: 1 }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
           <Grid xs={8}>
             <Pane>
               <Tierlist title={listTitle} tiers={tiers} activeId={activeId} />
