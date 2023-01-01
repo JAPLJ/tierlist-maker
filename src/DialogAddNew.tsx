@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -6,9 +7,11 @@ import {
   DialogTitle,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
-import { invoke } from "@tauri-apps/api/tauri";
+import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { useState } from "react";
+import { Radio, TailSpin } from "react-loader-spinner";
 import { ItemData } from "./TierlistData";
 
 const DialogAddNew: React.FC<{
@@ -21,6 +24,7 @@ const DialogAddNew: React.FC<{
     setImagePath("");
   };
   const handleCancel = () => {
+    clearForm();
     props.onClose(null);
   };
   const handleOk = () => {
@@ -50,11 +54,11 @@ const DialogAddNew: React.FC<{
   }
 
   return (
-    <Dialog open={props.open} keepMounted>
+    <Dialog open={props.open} keepMounted fullWidth maxWidth="md">
       <DialogTitle>Add New Item</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <TextField
               fullWidth
               variant="standard"
@@ -67,7 +71,15 @@ const DialogAddNew: React.FC<{
               onClick={() => getProductInfo(amazonUrl)}
               disabled={nowLoading}
             >
-              {nowLoading ? "LOADING" : "GET"}
+              {nowLoading ? (
+                <Radio
+                  colors={["#8C5E58", "#2B061E", "#361134"]}
+                  width="32"
+                  height="32"
+                />
+              ) : (
+                "Scrape"
+              )}
             </Button>
           </div>
           <TextField
@@ -77,6 +89,26 @@ const DialogAddNew: React.FC<{
             value={productName}
             onChange={(e) => setProductName(e.target.value)}
           />
+          <Typography variant="h6">Front Image</Typography>
+          {imagePath.trim() === "" || nowLoading ? (
+            <Box display="flex" justifyContent="center">
+              {nowLoading ? (
+                <TailSpin />
+              ) : (
+                <Typography align="center" variant="body1">
+                  No Image
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <Box display="flex" justifyContent="center">
+              <Box
+                component="img"
+                src={convertFileSrc(imagePath)}
+                sx={{ width: 244 }}
+              ></Box>
+            </Box>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>

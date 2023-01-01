@@ -17,11 +17,14 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import { Card, CardMedia } from "@mui/material";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
+import {
+  Box,
+  Card,
+  CardMedia,
+  Paper,
+  Unstable_Grid2 as Grid,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
-import Grid from "@mui/material/Unstable_Grid2";
 import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
