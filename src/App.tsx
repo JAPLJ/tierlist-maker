@@ -235,7 +235,6 @@ const App: React.FC = (_) => {
         }
       })();
 
-      console.log("handleDragOver");
       setPool((prev) => {
         if (activeList.id === "pool") {
           return {
@@ -298,7 +297,6 @@ const App: React.FC = (_) => {
       const overIdx = overList.items.findIndex((it) => it.id == overId);
       if (activeIdx !== overIdx) {
         if (activeList.id === "pool") {
-          console.log("handleDragEnd: pool");
           setPool((prev) => {
             return {
               id: prev.id,
@@ -306,7 +304,6 @@ const App: React.FC = (_) => {
             };
           });
         } else {
-          console.log("handleDragEnd: tier");
           setTiers((prev) => {
             return prev.map((t) => {
               if (t.id === activeList.id) {
