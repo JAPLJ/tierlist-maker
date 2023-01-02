@@ -69,7 +69,12 @@ const OverlayItem: React.FC<{ item: Item | null }> = (props) => {
 
 const App: React.FC = (_) => {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+
   const [listTitle, setListTitle] = useState<string>("Untitled Tierlist");
+  const handleListTitleChange = (text: string) => {
+    setListTitle(text);
+  };
+
   const [pool, setPool] = useState<ItemPool>(new ItemPool([]));
   const [tiers, setTiers] = useState<Tier[]>([]);
 
@@ -125,6 +130,18 @@ const App: React.FC = (_) => {
     });
     setTiers((prev) => {
       return prev.filter((t) => t.id !== id);
+    });
+  };
+
+  const handleTierTitleChange = (id: string, title: string) => {
+    setTiers((prev) => {
+      return prev.map((t) => {
+        if (t.id === id) {
+          return { ...t, title: title } as Tier;
+        } else {
+          return t;
+        }
+      });
     });
   };
 
@@ -332,6 +349,8 @@ const App: React.FC = (_) => {
                 title={listTitle}
                 tiers={tiers}
                 activeId={activeId}
+                onListTitleChange={handleListTitleChange}
+                onTierTitleChange={handleTierTitleChange}
                 onTierAdd={handleTierAdd}
                 onTierMove={handleTierMove}
                 onTierDelete={handleTierDelete}

@@ -15,6 +15,7 @@ import {
 import { Button, IconButton, List, ListItem, Stack } from "@mui/material";
 import { hsv } from "color-convert";
 import { useState } from "react";
+import ClickToEditField from "./ClickToEditField";
 import DialogDeleteItem from "./DialogDeleteItem";
 import DialogDeleteTier from "./DialogDeleteTier";
 import DialogEdit from "./DialogEdit";
@@ -82,6 +83,7 @@ const TierContainer: React.FC<{
   items: Item[];
   activeId: UniqueIdentifier | null;
   bgColor: string;
+  onTierTitleChange: (id: string, title: string) => void;
   onTierMove: (id: string, direction: "up" | "down") => void;
   onTierDelete: (id: string) => void;
   onEditButtonClick: (item: Item) => void;
@@ -101,7 +103,11 @@ const TierContainer: React.FC<{
         onMouseOver={() => setIsHovering(true)}
         onMouseOut={() => setIsHovering(false)}
       >
-        <span className="tier-title">{props.title}</span>
+        <ClickToEditField
+          text={props.title}
+          renderText={(text) => <span className="tier-title">{text}</span>}
+          onChange={(text) => props.onTierTitleChange(props.id, text)}
+        />
         {isHovering ? (
           <IconButton
             sx={{ position: "absolute", top: 0, left: 0 }}
@@ -160,6 +166,8 @@ const Tierlist: React.FC<{
   title: string;
   tiers: Tier[];
   activeId: UniqueIdentifier | null;
+  onListTitleChange: (title: string) => void;
+  onTierTitleChange: (id: string, title: string) => void;
   onTierMove: (id: string, direction: "up" | "down") => void;
   onTierAdd: () => void;
   onTierDelete: (id: string) => void;
@@ -198,7 +206,11 @@ const Tierlist: React.FC<{
 
   return (
     <div id="tierlist-pane">
-      <h2>{props.title}</h2>
+      <ClickToEditField
+        text={props.title}
+        renderText={(text) => <h2>{text}</h2>}
+        onChange={(text) => props.onListTitleChange(text)}
+      />
       <div id="tierlist">
         {props.tiers.map((tier, idx) => (
           <TierContainer
@@ -208,6 +220,7 @@ const Tierlist: React.FC<{
             items={tier.items}
             activeId={props.activeId}
             bgColor={hsv.hex([(idx / numTier) * 360, 27, 100])}
+            onTierTitleChange={props.onTierTitleChange}
             onTierMove={props.onTierMove}
             onTierDelete={(id) => openDeleteTierDialog(id)}
             onEditButtonClick={handleItemEditButtonClick}
