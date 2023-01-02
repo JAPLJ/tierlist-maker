@@ -338,10 +338,11 @@ const App: React.FC = (_) => {
                 onDeleteItem={handleDeleteItem}
                 onEditItem={handleEditItem}
               />
-              <div style={{ position: "absolute", left: 4, bottom: 4 }}>
+              <div style={{ position: "absolute", left: 2, bottom: 2 }}>
                 <IconButton
                   sx={{
                     border: "1px solid #aaa",
+                    margin: "2px",
                   }}
                   onClick={() => openTierlist()}
                 >
@@ -350,6 +351,7 @@ const App: React.FC = (_) => {
                 <IconButton
                   sx={{
                     border: "1px solid #aaa",
+                    margin: "2px",
                   }}
                   onClick={() => saveTierlist()}
                 >
