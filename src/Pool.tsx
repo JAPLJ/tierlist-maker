@@ -22,6 +22,7 @@ import DialogAddNew from "./DialogAddNew";
 import DialogDeleteItem from "./DialogDeleteItem";
 import DialogEdit from "./DialogEdit";
 import { fileSrc } from "./FileSrcUtil";
+import { useItemDeletion, useItemEdit } from "./ItemUpdate";
 import "./Pool.css";
 import { Item, ItemData } from "./TierlistData";
 
@@ -117,32 +118,19 @@ const Pool: React.FC<{
     setAddNewDialogOpen(false);
   };
 
-  const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
-  const [deleteItemDialogOpen, setDeleteItemDialogOpen] = useState(false);
-  const handleItemDeleteButtonClick = (item: Item) => {
-    setItemToDelete(item);
-    setDeleteItemDialogOpen(true);
-  };
-  const handleDeleteDialogClose = (agree: boolean, item: Item) => {
-    if (agree) {
-      props.onDeleteItem(item.id);
-    }
-    setDeleteItemDialogOpen(false);
-  };
+  const {
+    itemToDelete,
+    deleteItemDialogOpen,
+    handleItemDeleteButtonClick,
+    handleDeleteDialogClose,
+  } = useItemDeletion(props.onDeleteItem);
 
-  const [itemToEdit, setItemToEdit] = useState<Item | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const handleItemEditButtonClick = (item: Item) => {
-    setItemToEdit(item);
-    setEditDialogOpen(true);
-  };
-  const handleEditDialogClose = (update: boolean, item: Item) => {
-    if (update) {
-      console.log(item.thumb);
-      props.onEditItem(item);
-    }
-    setEditDialogOpen(false);
-  };
+  const {
+    itemToEdit,
+    editDialogOpen,
+    handleItemEditButtonClick,
+    handleEditDialogClose,
+  } = useItemEdit(props.onEditItem);
 
   return (
     <div ref={setNodeRef} id="pool">

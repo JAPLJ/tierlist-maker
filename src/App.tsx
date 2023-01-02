@@ -144,24 +144,68 @@ const App: React.FC = (_) => {
   };
 
   const handleDeleteItem = (id: number) => {
-    setPool((prev) => {
-      return { ...prev, items: prev.items.filter((it) => it.id !== id) };
-    });
+    const list = findContainingList(id);
+    if (!list) {
+      return;
+    }
+    if (list.id === "pool") {
+      setPool((prev) => {
+        return { ...prev, items: prev.items.filter((it) => it.id !== id) };
+      });
+    } else {
+      setTiers((prev) => {
+        return prev.map((t) => {
+          if (t.id === list.id) {
+            return {
+              ...t,
+              items: t.items.filter((it) => it.id !== id),
+            } as Tier;
+          } else {
+            return t;
+          }
+        });
+      });
+    }
   };
 
   const handleEditItem = (item: Item) => {
-    setPool((prev) => {
-      return {
-        ...prev,
-        items: prev.items.map((it) => {
-          if (it.id === item.id) {
-            return item;
+    const list = findContainingList(item.id);
+    if (!list) {
+      return;
+    }
+    if (list.id === "pool") {
+      setPool((prev) => {
+        return {
+          ...prev,
+          items: prev.items.map((it) => {
+            if (it.id === item.id) {
+              return item;
+            } else {
+              return it;
+            }
+          }),
+        };
+      });
+    } else {
+      setTiers((prev) => {
+        return prev.map((t) => {
+          if (t.id === list.id) {
+            return {
+              ...t,
+              items: t.items.map((it) => {
+                if (it.id === item.id) {
+                  return item;
+                } else {
+                  return it;
+                }
+              }),
+            } as Tier;
           } else {
-            return it;
+            return t;
           }
-        }),
-      };
-    });
+        });
+      });
+    }
   };
 
   const sensors = useSensors(
@@ -300,6 +344,8 @@ const App: React.FC = (_) => {
                 onTierAdd={handleTierAdd}
                 onTierMove={handleTierMove}
                 onTierDelete={handleTierDelete}
+                onDeleteItem={handleDeleteItem}
+                onEditItem={handleEditItem}
               />
             </Pane>
           </Grid>

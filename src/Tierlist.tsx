@@ -8,17 +8,26 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   AddCircleOutline,
   DeleteOutlined,
+  EditOutlined,
   MoveDownOutlined,
   MoveUpOutlined,
 } from "@mui/icons-material";
 import { Button, IconButton, List, ListItem, Stack } from "@mui/material";
 import { useState } from "react";
+import DialogDeleteItem from "./DialogDeleteItem";
 import DialogDeleteTier from "./DialogDeleteTier";
+import DialogEdit from "./DialogEdit";
 import { fileSrc } from "./FileSrcUtil";
+import { useItemDeletion, useItemEdit } from "./ItemUpdate";
 import "./Tierlist.css";
 import { Item, Tier } from "./TierlistData";
 
-const TierItem: React.FC<{ item: Item; isActive: boolean }> = (props) => {
+const TierItem: React.FC<{
+  item: Item;
+  isActive: boolean;
+  onEditButtonClick: (item: Item) => void;
+  onDeleteButtonClick: (item: Item) => void;
+}> = (props) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: props.item.id, transition: null });
 
@@ -28,15 +37,39 @@ const TierItem: React.FC<{ item: Item; isActive: boolean }> = (props) => {
     opacity: props.isActive ? 0.33 : 1.0,
   };
 
+  const [isHovering, setIsHovering] = useState(false);
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <ListItem disablePadding>
+      <ListItem
+        disablePadding
+        onMouseOver={() => setIsHovering(true)}
+        onMouseOut={() => setIsHovering(false)}
+      >
         <img
           src={`${fileSrc(props.item.thumb ?? "")}`}
           width="80px"
           alt={props.item.name}
           loading="lazy"
         />
+        {isHovering ? (
+          <IconButton
+            sx={{ position: "absolute", right: 0, top: 0 }}
+            data-no-dnd
+            onClick={() => props.onDeleteButtonClick(props.item)}
+          >
+            <DeleteOutlined color="primary" />
+          </IconButton>
+        ) : null}
+        {isHovering ? (
+          <IconButton
+            sx={{ position: "absolute", right: 0, bottom: 0 }}
+            data-no-dnd
+            onClick={() => props.onEditButtonClick(props.item)}
+          >
+            <EditOutlined color="primary" />
+          </IconButton>
+        ) : null}
       </ListItem>
     </div>
   );
@@ -49,6 +82,8 @@ const TierContainer: React.FC<{
   activeId: UniqueIdentifier | null;
   onTierMove: (id: string, direction: "up" | "down") => void;
   onTierDelete: (id: string) => void;
+  onEditButtonClick: (item: Item) => void;
+  onDeleteButtonClick: (item: Item) => void;
 }> = (props) => {
   const { setNodeRef } = useDroppable({ id: props.id });
 
@@ -105,6 +140,8 @@ const TierContainer: React.FC<{
                 item={item}
                 key={`in_t_${item.id}`}
                 isActive={item.id === props.activeId}
+                onEditButtonClick={props.onEditButtonClick}
+                onDeleteButtonClick={props.onDeleteButtonClick}
               />
             ))}
           </List>
@@ -121,6 +158,8 @@ const Tierlist: React.FC<{
   onTierMove: (id: string, direction: "up" | "down") => void;
   onTierAdd: () => void;
   onTierDelete: (id: string) => void;
+  onDeleteItem: (id: number) => void;
+  onEditItem: (item: Item) => void;
 }> = (props) => {
   const [deleteTierDialogOpen, setDeleteTierDialogOpen] = useState(false);
   const [tierIdToDelete, setTierIdToDelete] = useState("");
@@ -136,6 +175,20 @@ const Tierlist: React.FC<{
     setDeleteTierDialogOpen(false);
   };
 
+  const {
+    itemToDelete,
+    deleteItemDialogOpen,
+    handleItemDeleteButtonClick,
+    handleDeleteDialogClose,
+  } = useItemDeletion(props.onDeleteItem);
+
+  const {
+    itemToEdit,
+    editDialogOpen,
+    handleItemEditButtonClick,
+    handleEditDialogClose,
+  } = useItemEdit(props.onEditItem);
+
   return (
     <div id="tierlist-pane">
       <h2>{props.title}</h2>
@@ -149,6 +202,8 @@ const Tierlist: React.FC<{
             activeId={props.activeId}
             onTierMove={props.onTierMove}
             onTierDelete={(id) => openDeleteTierDialog(id)}
+            onEditButtonClick={handleItemEditButtonClick}
+            onDeleteButtonClick={handleItemDeleteButtonClick}
           />
         ))}
       </div>
@@ -163,6 +218,16 @@ const Tierlist: React.FC<{
         open={deleteTierDialogOpen}
         id={tierIdToDelete}
         onClose={handleDeleteTierDialogClose}
+      />
+      <DialogDeleteItem
+        open={deleteItemDialogOpen}
+        item={itemToDelete!}
+        onClose={handleDeleteDialogClose}
+      />
+      <DialogEdit
+        open={editDialogOpen}
+        item={itemToEdit}
+        onClose={handleEditDialogClose}
       />
     </div>
   );
