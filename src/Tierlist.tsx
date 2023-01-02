@@ -13,6 +13,7 @@ import {
   MoveUpOutlined,
 } from "@mui/icons-material";
 import { Button, IconButton, List, ListItem, Stack } from "@mui/material";
+import { hsv } from "color-convert";
 import { useState } from "react";
 import DialogDeleteItem from "./DialogDeleteItem";
 import DialogDeleteTier from "./DialogDeleteTier";
@@ -80,6 +81,7 @@ const TierContainer: React.FC<{
   title: string;
   items: Item[];
   activeId: UniqueIdentifier | null;
+  bgColor: string;
   onTierMove: (id: string, direction: "up" | "down") => void;
   onTierDelete: (id: string) => void;
   onEditButtonClick: (item: Item) => void;
@@ -93,6 +95,9 @@ const TierContainer: React.FC<{
     <div className="tier-container">
       <div
         className="tier-title-box"
+        style={{
+          backgroundColor: `#${props.bgColor}`,
+        }}
         onMouseOver={() => setIsHovering(true)}
         onMouseOut={() => setIsHovering(false)}
       >
@@ -189,17 +194,20 @@ const Tierlist: React.FC<{
     handleEditDialogClose,
   } = useItemEdit(props.onEditItem);
 
+  const numTier = props.tiers.length;
+
   return (
     <div id="tierlist-pane">
       <h2>{props.title}</h2>
       <div id="tierlist">
-        {props.tiers.map((tier) => (
+        {props.tiers.map((tier, idx) => (
           <TierContainer
             id={tier.id}
             key={tier.id}
             title={tier.title}
             items={tier.items}
             activeId={props.activeId}
+            bgColor={hsv.hex([(idx / numTier) * 360, 27, 100])}
             onTierMove={props.onTierMove}
             onTierDelete={(id) => openDeleteTierDialog(id)}
             onEditButtonClick={handleItemEditButtonClick}
