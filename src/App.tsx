@@ -15,14 +15,17 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import { FolderOpenOutlined, Save } from "@mui/icons-material";
 import {
   Box,
   Card,
   CardMedia,
+  IconButton,
   Paper,
   Unstable_Grid2 as Grid,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { invoke } from "@tauri-apps/api/tauri";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
@@ -30,7 +33,15 @@ import { KeyboardSensor, MouseSensor } from "./CustomSensor";
 import { fileSrc } from "./FileSrcUtil";
 import Pool from "./Pool";
 import Tierlist from "./Tierlist";
-import { Item, ItemList, ItemPool, Tier } from "./TierlistData";
+import {
+  BackendTierlist,
+  fromBackendTierlist,
+  Item,
+  ItemList,
+  ItemPool,
+  Tier,
+  toBackendTierlist,
+} from "./TierlistData";
 
 const Pane = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "darkgray" : "white",
@@ -57,40 +68,32 @@ const OverlayItem: React.FC<{ item: Item | null }> = (props) => {
 };
 
 const App: React.FC = (_) => {
-  function tmpImgSrc(k: number): string {
-    return `test${(k % 3) + 1}.png`;
-  }
-
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [listTitle, setListTitle] = useState<string>("Untitled Tierlist");
-  const [pool, setPool] = useState<ItemPool>(
-    new ItemPool(
-      Array.from({ length: 5 }, (_, k) => k).map(
-        (k) => new Item(k + 1, `name-${k + 1}`, `url-${k + 1}`, tmpImgSrc(k))
-      )
-    )
-  );
-  const [tiers, setTiers] = useState<Tier[]>([
-    new Tier(
-      1,
-      "tier1",
-      Array.from({ length: 15 }, (_, k) => k).map(
-        (k) =>
-          new Item(100 + k, `name-${100 + k}`, `url-${100 + k}`, tmpImgSrc(k))
-      )
-    ),
-    new Tier(
-      2,
-      "tier2",
-      Array.from({ length: 5 }, (_, k) => k).map(
-        (k) =>
-          new Item(200 + k, `name-${200 + k}`, `url-${200 + k}`, tmpImgSrc(k))
-      )
-    ),
-  ]);
+  const [pool, setPool] = useState<ItemPool>(new ItemPool([]));
+  const [tiers, setTiers] = useState<Tier[]>([]);
+
+  const saveTierlist = async () => {
+    // TODO: Error notification
+    await invoke("write_tierlist_to_db", {
+      tierlist: toBackendTierlist(listTitle, pool, tiers),
+    });
+  };
+
+  const openTierlist = async () => {
+    const tierlist = await invoke<BackendTierlist>("read_tierlist_from_db");
+    const {
+      title: newTitle,
+      pool: newPool,
+      tiers: newTiers,
+    } = fromBackendTierlist(tierlist);
+    setListTitle(newTitle);
+    setPool(newPool);
+    setTiers(newTiers);
+  };
 
   // TODO: new tier id
-  const [tmpNewTierId, setTmpNewTierId] = useState(10000);
+  const [tmpNewTierId, setTmpNewTierId] = useState(1);
   const handleTierAdd = () => {
     setTiers((prev) => {
       return [...prev, new Tier(tmpNewTierId, "Untitled Tier", [])];
@@ -324,7 +327,7 @@ const App: React.FC = (_) => {
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={1}>
           <Grid xs={8}>
-            <Pane>
+            <Pane sx={{ position: "relative" }}>
               <Tierlist
                 title={listTitle}
                 tiers={tiers}
@@ -335,6 +338,24 @@ const App: React.FC = (_) => {
                 onDeleteItem={handleDeleteItem}
                 onEditItem={handleEditItem}
               />
+              <div style={{ position: "absolute", left: 4, bottom: 4 }}>
+                <IconButton
+                  sx={{
+                    border: "1px solid #aaa",
+                  }}
+                  onClick={() => openTierlist()}
+                >
+                  <FolderOpenOutlined color="primary" sx={{ fontSize: 32 }} />
+                </IconButton>
+                <IconButton
+                  sx={{
+                    border: "1px solid #aaa",
+                  }}
+                  onClick={() => saveTierlist()}
+                >
+                  <Save color="primary" sx={{ fontSize: 32 }} />
+                </IconButton>
+              </div>{" "}
             </Pane>
           </Grid>
           <Grid xs={4}>

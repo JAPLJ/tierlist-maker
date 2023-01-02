@@ -5,6 +5,6 @@ export function fileSrc(path: string): string {
     return convertFileSrc(path);
   } else {
     // for testing purpose
-    return path;
+    return convertFileSrc(path);
   }
 }

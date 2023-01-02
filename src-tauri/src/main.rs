@@ -14,13 +14,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cur_sqlite_pool: Mutex<Option<SqlitePool>> = Mutex::new(None);
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            tierlist::commands::add_new_item,
-            tierlist::commands::delete_item,
-            tierlist::commands::move_item,
-            tierlist::commands::add_new_tier,
-            tierlist::commands::delete_tier,
-            tierlist::commands::move_tier,
-            db::commands::open_db,
             db::commands::read_tierlist_from_db,
             db::commands::write_tierlist_to_db,
             scraping::commands::scrape_amazon,

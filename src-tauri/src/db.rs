@@ -78,15 +78,12 @@ async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<TierList
             None
         };
 
-        tierlist.items.insert(
-            item_id,
-            Item {
-                id: item_id,
-                name: name.to_owned(),
-                url: url.to_owned(),
-                thumb: thumb_path,
-            },
-        );
+        tierlist.items.push(Item {
+            id: item_id,
+            name: name.to_owned(),
+            url: url.to_owned(),
+            thumb: thumb_path,
+        });
         tierlist.item_max_id = tierlist.item_max_id.max(item_id);
     }
 
@@ -103,9 +100,9 @@ async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<TierList
         tierlist.tiers[tier_idx].items.push(item_id);
         items_in_list.insert(item_id);
     }
-    for (&item_id, _) in tierlist.items.iter() {
-        if !items_in_list.contains(&item_id) {
-            tierlist.items_pool.push(item_id);
+    for item in tierlist.items.iter() {
+        if !items_in_list.contains(&item.id) {
+            tierlist.items_pool.push(item.id);
         }
     }
 
@@ -133,7 +130,7 @@ async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> 
 
     const SQL_ITEMS: &str = "INSERT INTO items(id, name, url, thumb) ";
     let mut images = HashMap::new();
-    for (_, item) in tierlist.items.iter() {
+    for item in tierlist.items.iter() {
         if let Some(thumb_file) = &item.thumb {
             let mut thumb_file = File::open(thumb_file).await?;
             let mut buf = vec![];
@@ -142,7 +139,7 @@ async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> 
         }
     }
     let mut qbuilder: QueryBuilder<Sqlite> = QueryBuilder::new(SQL_ITEMS);
-    qbuilder.push_values(tierlist.items.iter(), |mut b, (_, item)| {
+    qbuilder.push_values(tierlist.items.iter(), |mut b, item| {
         b.push_bind(item.id)
             .push_bind(&item.name)
             .push_bind(&item.url)
@@ -169,37 +166,36 @@ async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> 
     Ok(())
 }
 
+async fn open_db(cur_pool: &mut Option<SqlitePool>, path: &Path) -> DbResult<SqlitePool> {
+    if let Some(cur_pool) = cur_pool {
+        cur_pool.close().await;
+    }
+    connect(&path.to_string_lossy().to_string()).await
+}
+
 pub mod commands {
     use super::*;
-    use tauri::{async_runtime::Mutex, State};
+    use tauri::{api::dialog::blocking::FileDialogBuilder, async_runtime::Mutex, State};
     use tempdir::TempDir;
-
-    #[tauri::command]
-    pub async fn open_db(
-        pool: State<'_, Mutex<Option<SqlitePool>>>,
-        path: String,
-    ) -> Result<(), String> {
-        let mut pool = pool.lock().await;
-        if let Some(cur_pool) = &*pool {
-            cur_pool.close().await;
-        }
-        *pool = Some(connect(&path).await.map_err(|e| e.to_string())?);
-        Ok(())
-    }
 
     #[tauri::command]
     pub async fn read_tierlist_from_db(
         pool: State<'_, Mutex<Option<SqlitePool>>>,
-        tierlist: State<'_, Mutex<TierList>>,
         thumb_dir: State<'_, TempDir>,
-    ) -> Result<(), String> {
-        let pool = pool.lock().await;
-        let mut tierlist = tierlist.lock().await;
-        if let Some(pool) = &*pool {
-            *tierlist = read_tierlist(pool, thumb_dir.path())
+    ) -> Result<TierList, String> {
+        let mut pool = pool.lock().await;
+        let path = FileDialogBuilder::new()
+            .pick_file()
+            .ok_or("DB not opened".to_owned())?;
+        *pool = Some(
+            open_db(&mut *pool, &path)
                 .await
-                .map_err(|e| e.to_string())?;
-            Ok(())
+                .map_err(|e| e.to_string())?,
+        );
+        if let Some(pool) = &*pool {
+            read_tierlist(pool, thumb_dir.path())
+                .await
+                .map_err(|e| e.to_string())
         } else {
             Err("DB not opened".to_owned())
         }
@@ -208,10 +204,19 @@ pub mod commands {
     #[tauri::command]
     pub async fn write_tierlist_to_db(
         pool: State<'_, Mutex<Option<SqlitePool>>>,
-        tierlist: State<'_, Mutex<TierList>>,
+        tierlist: TierList,
     ) -> Result<(), String> {
-        let pool = pool.lock().await;
-        let tierlist = tierlist.lock().await;
+        let mut pool = pool.lock().await;
+        if pool.is_none() {
+            let path = FileDialogBuilder::new()
+                .save_file()
+                .ok_or("DB not opened".to_owned())?;
+            *pool = Some(
+                open_db(&mut *pool, &path)
+                    .await
+                    .map_err(|e| e.to_string())?,
+            );
+        }
         if let Some(pool) = &*pool {
             write_tierlist(pool, &tierlist)
                 .await
@@ -281,9 +286,9 @@ mod tests {
 
         assert_eq!(tierlist.title, tierlist_title);
         assert_eq!(tierlist.tiers.len(), 3);
-        assert!(tierlist.items.contains_key(&1));
-        assert!(tierlist.items.contains_key(&2));
-        assert!(tierlist.items.contains_key(&3));
+        assert!(tierlist.items.iter().any(|it| it.id == 1));
+        assert!(tierlist.items.iter().any(|it| it.id == 2));
+        assert!(tierlist.items.iter().any(|it| it.id == 3));
         assert_eq!(tierlist.items_pool, vec![3]);
 
         let tier2 = &tierlist.tiers[1];
@@ -291,7 +296,7 @@ mod tests {
         assert_eq!(tier2.title, tiers[1].2);
         assert_eq!(tier2.items, vec![2, 1]);
 
-        let item1 = tierlist.items.get(&1).unwrap();
+        let item1 = tierlist.items.iter().find(|it| it.id == 1).unwrap();
         assert_eq!(item1.id, 1);
         assert_eq!(item1.name, "item1");
         assert_eq!(item1.url, "url1");
@@ -326,35 +331,26 @@ mod tests {
                 },
             ],
             tier_max_id: 2,
-            items: HashMap::from([
-                (
-                    1,
-                    Item {
-                        id: 1,
-                        name: "item1".to_owned(),
-                        url: "url1".to_owned(),
-                        thumb: Some(thumb1_path.to_string_lossy().to_string()),
-                    },
-                ),
-                (
-                    2,
-                    Item {
-                        id: 2,
-                        name: "item2".to_owned(),
-                        url: "url2".to_owned(),
-                        thumb: None,
-                    },
-                ),
-                (
-                    3,
-                    Item {
-                        id: 3,
-                        name: "item3".to_owned(),
-                        url: "url3".to_owned(),
-                        thumb: None,
-                    },
-                ),
-            ]),
+            items: vec![
+                Item {
+                    id: 1,
+                    name: "item1".to_owned(),
+                    url: "url1".to_owned(),
+                    thumb: Some(thumb1_path.to_string_lossy().to_string()),
+                },
+                Item {
+                    id: 2,
+                    name: "item2".to_owned(),
+                    url: "url2".to_owned(),
+                    thumb: None,
+                },
+                Item {
+                    id: 3,
+                    name: "item3".to_owned(),
+                    url: "url3".to_owned(),
+                    thumb: None,
+                },
+            ],
             items_pool: vec![3],
             item_max_id: 3,
         };
