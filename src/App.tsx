@@ -37,6 +37,7 @@ import {
   BackendTierlist,
   fromBackendTierlist,
   Item,
+  ItemData,
   ItemList,
   ItemPool,
   Tier,
@@ -95,15 +96,21 @@ const App: React.FC = (_) => {
     setListTitle(newTitle);
     setPool(newPool);
     setTiers(newTiers);
+
+    let maxItemId = Math.max(...newPool.items.map((it) => it.id));
+    newTiers.forEach((t) => {
+      maxItemId = Math.max(maxItemId, ...t.items.map((it) => it.id));
+    });
+    setNewItemId(maxItemId + 1);
+    setNewTierId(Math.max(...tiers.map((it) => it.numericId)) + 1);
   };
 
-  // TODO: new tier id
-  const [tmpNewTierId, setTmpNewTierId] = useState(1);
+  const [newTierId, setNewTierId] = useState(1);
   const handleTierAdd = () => {
     setTiers((prev) => {
-      return [...prev, new Tier(tmpNewTierId, "Untitled Tier", [])];
+      return [...prev, new Tier(newTierId, "Untitled Tier", [])];
     });
-    setTmpNewTierId(tmpNewTierId + 1);
+    setNewTierId(newTierId + 1);
   };
 
   const handleTierMove = (id: string, direction: "up" | "down") => {
@@ -145,11 +152,19 @@ const App: React.FC = (_) => {
     });
   };
 
-  const handleAddNewItem = (item: Item) => {
+  const [newItemId, setNewItemId] = useState(1);
+  const handleAddNewItem = (itemData: ItemData) => {
+    const item = new Item(
+      newItemId,
+      itemData.name,
+      itemData.url,
+      itemData.thumb ?? ""
+    );
+    setNewItemId(newItemId + 1);
     setPool((prev) => {
       return {
         ...prev,
-        items: [...prev.items, { ...item, thumb: item.thumb ?? "" }],
+        items: [...prev.items, item],
       };
     });
   };

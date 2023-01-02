@@ -81,7 +81,7 @@ const PoolItem: React.FC<{
 const Pool: React.FC<{
   items: Item[];
   activeId: UniqueIdentifier | null;
-  onAddNewItem: (item: Item) => void;
+  onAddNewItem: (itemData: ItemData) => void;
   onDeleteItem: (id: number) => void;
   onEditItem: (item: Item) => void;
 }> = (props) => {
@@ -106,14 +106,9 @@ const Pool: React.FC<{
     setAddNewDialogOpen(true);
   };
 
-  // TODO: call add_new_item command
-  const [tmpNewItemId, setTmpNewItemId] = useState(1000);
   const handleAddNewDialogClose = (itemData: ItemData | null) => {
     if (itemData) {
-      props.onAddNewItem(
-        new Item(tmpNewItemId, itemData.name, itemData.url, itemData.thumb)
-      );
-      setTmpNewItemId((prev) => prev + 1);
+      props.onAddNewItem(itemData);
     }
     setAddNewDialogOpen(false);
   };
