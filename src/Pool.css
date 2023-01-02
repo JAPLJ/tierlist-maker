@@ -1,6 +1,12 @@
 #pool {
   height: 95vh;
   overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#pool::-webkit-scrollbar {
+  display: none;
 }
 
 #pool .highlight {

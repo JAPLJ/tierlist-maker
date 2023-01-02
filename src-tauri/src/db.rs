@@ -113,6 +113,16 @@ async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> 
     sqlx::migrate!("./sql").run(pool).await?;
     let mut tx = pool.begin().await?;
 
+    // cleanup
+    sqlx::query("DELETE FROM tierlist;")
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query("DELETE FROM tiers;").execute(&mut *tx).await?;
+    sqlx::query("DELETE FROM items;").execute(&mut *tx).await?;
+    sqlx::query("DELETE FROM items_pos;")
+        .execute(&mut *tx)
+        .await?;
+
     const SQL_TIERLIST: &str = "INSERT INTO tierlist(title) VALUES (?)";
     sqlx::query(SQL_TIERLIST)
         .bind(&tierlist.title)

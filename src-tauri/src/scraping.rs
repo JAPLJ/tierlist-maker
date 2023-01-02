@@ -7,12 +7,18 @@ use tokio::fs;
 async fn scrape_amazon(url: &str) -> Result<(String, String), String> {
     let img_selector = scraper::Selector::parse("img#ebooksImgBlkFront, img#imgBlkFront").unwrap();
     let title_selector = scraper::Selector::parse("#productTitle").unwrap();
-    let body = reqwest::get(url)
+    let body = reqwest::ClientBuilder::new()
+        .gzip(true)
+        .build()
+        .unwrap()
+        .get(url)
+        .send()
         .await
         .map_err(|e| e.to_string())?
         .text()
         .await
         .map_err(|e| e.to_string())?;
+
     let document = scraper::Html::parse_document(&body);
 
     let img = document

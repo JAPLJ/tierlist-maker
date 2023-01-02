@@ -50,7 +50,7 @@ const TierItem: React.FC<{
       >
         <img
           src={`${fileSrc(props.item.thumb ?? "")}`}
-          width="80px"
+          style={{ width: 80, height: 113, objectFit: "contain" }}
           alt={props.item.name}
           loading="lazy"
         />

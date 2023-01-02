@@ -34,20 +34,16 @@ export class Tier {
   title: string;
   items: Item[];
 
-  public toBackendTier() {
-    return {
-      id: this.numericId,
-      title: this.title,
-      items: this.items.map((it) => it.id),
-    };
-  }
-
   constructor(numericId: number, title: string, items: Item[]) {
     this.id = `t${numericId}`;
     this.numericId = numericId;
     this.title = title;
     this.items = items;
   }
+}
+
+function toBackendTier(t: Tier) {
+  return { id: t.numericId, title: t.title, items: t.items.map((it) => it.id) };
 }
 
 export interface ItemList {
@@ -86,11 +82,11 @@ export function toBackendTierlist(
   });
   return {
     title,
-    tiers: tiers.map((t) => t.toBackendTier()),
-    tierMaxId: Math.max(...tiers.map((t) => t.numericId)),
+    tiers: tiers.map((t) => toBackendTier(t)),
+    tierMaxId: Math.max(0, ...tiers.map((t) => t.numericId)),
     items,
     itemsPool: pool.items.map((it) => it.id),
-    itemMaxId: Math.max(...pool.items.map((it) => it.id)),
+    itemMaxId: Math.max(0, ...pool.items.map((it) => it.id)),
   };
 }
 

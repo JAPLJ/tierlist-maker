@@ -1,6 +1,12 @@
 #tierlist-pane {
   height: 95vh;
   overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#tierlist-pane::-webkit-scrollbar {
+  display: none;
 }
 
 #tierlist {
@@ -13,6 +19,7 @@
   justify-content: left;
   background-color: #1a1a17;
   margin-top: 2px;
+  min-height: 80px;
 }
 
 .tier-title-box {

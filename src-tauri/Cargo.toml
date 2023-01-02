@@ -19,11 +19,11 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.2", features = ["api-all", "devtools"] }
 image = "0.24.5"
 scraper = "0.14.0"
-reqwest = "0.11.13"
+reqwest = { version = "0.11.13", features = ["gzip"] }
 tokio = { version = "1.23.0", features = ["macros"] }
 tempdir = "0.3.7"
 url = "2.3.1"
-sqlx = { version = "0.6.2", features = ["sqlite", "runtime-tokio-native-tls"] }
+sqlx = { version = "0.6.2", features = ["sqlite", "runtime-tokio-native-tls", "macros"] }
 tokio-stream = "0.1.11"
 
 [features]
