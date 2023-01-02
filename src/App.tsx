@@ -23,7 +23,6 @@ import {
   Unstable_Grid2 as Grid,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { invoke } from "@tauri-apps/api/tauri";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
@@ -58,14 +57,6 @@ const OverlayItem: React.FC<{ item: Item | null }> = (props) => {
 };
 
 const App: React.FC = (_) => {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
   function tmpImgSrc(k: number): string {
     return `test${(k % 3) + 1}.png`;
   }
