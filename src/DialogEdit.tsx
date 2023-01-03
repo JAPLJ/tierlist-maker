@@ -17,6 +17,7 @@ const DialogEdit: React.FC<{
       url: amazonUrl,
       name: productName,
       thumb: imagePath,
+      memo: itemMemo,
     });
   };
 
@@ -24,23 +25,30 @@ const DialogEdit: React.FC<{
     setAmazonUrl(itemData.url);
     setProductName(itemData.name);
     setImagePath(itemData.thumb ?? "");
+    setItemMemo(itemData.memo);
     setSuccessfullyLoaded(itemData.thumb !== null && itemData.thumb !== "");
   };
 
   const [amazonUrl, setAmazonUrl] = useState("");
   const [productName, setProductName] = useState("");
   const [imagePath, setImagePath] = useState("");
+  const [itemMemo, setItemMemo] = useState("");
   const [successfullyLoaded, setSuccessfullyLoaded] = useState(false);
 
   useEffect(() => {
-    onChange(props.item ?? { url: "", name: "", thumb: "" });
+    onChange(props.item ?? { url: "", name: "", thumb: "", memo: "" });
   }, [props.item]);
 
   return (
     <Dialog open={props.open} keepMounted fullWidth maxWidth="md">
       <DialogTitle>Edit Item</DialogTitle>
       <DialogItemView
-        itemData={{ name: productName, url: amazonUrl, thumb: imagePath }}
+        itemData={{
+          name: productName,
+          url: amazonUrl,
+          thumb: imagePath,
+          memo: itemMemo,
+        }}
         onChange={onChange}
       />
       <DialogActions>

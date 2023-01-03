@@ -3,12 +3,20 @@ export class Item {
   name: string;
   url: string;
   thumb: string | null;
+  memo: string;
 
-  constructor(id: number, name: string, url: string, thumb: string | null) {
+  constructor(
+    id: number,
+    name: string,
+    url: string,
+    thumb: string | null,
+    memo: string
+  ) {
     this.id = id;
     this.name = name;
     this.url = url;
     this.thumb = thumb;
+    this.memo = memo;
   }
 }
 
@@ -16,6 +24,7 @@ export interface ItemData {
   name: string;
   url: string;
   thumb: string | null;
+  memo: string;
 }
 
 export class ItemPool {

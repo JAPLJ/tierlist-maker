@@ -157,7 +157,8 @@ const App: React.FC = (_) => {
       newItemId,
       itemData.name,
       itemData.url,
-      itemData.thumb ?? ""
+      itemData.thumb ?? "",
+      itemData.memo
     );
     setNewItemId(newItemId + 1);
     setPool((prev) => {

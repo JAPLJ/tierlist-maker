@@ -16,8 +16,13 @@ const DialogItemView: React.FC<{
   itemData: ItemData | null;
   onChange: (itemData: ItemData) => void;
 }> = (props) => {
-  const curData = props.itemData ?? { name: "", url: "", thumb: "" };
-  const { name: productName, url: amazonUrl, thumb: imagePath } = curData;
+  const curData = props.itemData ?? { name: "", url: "", thumb: "", memo: "" };
+  const {
+    name: productName,
+    url: amazonUrl,
+    thumb: imagePath,
+    memo: itemMemo,
+  } = curData;
 
   const [nowLoading, setNowLoading] = useState(false);
 
@@ -69,6 +74,15 @@ const DialogItemView: React.FC<{
           label="Name"
           value={productName}
           onChange={(e) => props.onChange({ ...curData, name: e.target.value })}
+        />
+        <TextField
+          fullWidth
+          variant="standard"
+          label="Memo"
+          value={itemMemo}
+          onChange={(e) => props.onChange({ ...curData, memo: e.target.value })}
+          multiline
+          minRows={2}
         />
         <Typography variant="h6">Front Image</Typography>
         {imagePath?.trim() === "" || nowLoading ? (

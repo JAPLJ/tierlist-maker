@@ -68,6 +68,7 @@ async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<TierList
         let name: &str = row.try_get("name")?;
         let url: &str = row.try_get("url")?;
         let thumb: Option<Vec<u8>> = row.try_get("thumb")?;
+        let memo: &str = row.try_get("memo")?;
 
         let thumb_path = if let Some(thumb) = thumb {
             let thumb_path = thumb_dir.join(format!("_indb_{}", item_id));
@@ -83,6 +84,7 @@ async fn read_tierlist(pool: &SqlitePool, thumb_dir: &Path) -> DbResult<TierList
             name: name.to_owned(),
             url: url.to_owned(),
             thumb: thumb_path,
+            memo: memo.to_owned(),
         });
         tierlist.item_max_id = tierlist.item_max_id.max(item_id);
     }
@@ -138,7 +140,7 @@ async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> 
     });
     qbuilder.build().execute(&mut *tx).await?;
 
-    const SQL_ITEMS: &str = "INSERT INTO items(id, name, url, thumb) ";
+    const SQL_ITEMS: &str = "INSERT INTO items(id, name, url, thumb, memo) ";
     let mut images = HashMap::new();
     for item in tierlist.items.iter() {
         if let Some(thumb_file) = &item.thumb {
@@ -153,7 +155,8 @@ async fn write_tierlist(pool: &SqlitePool, tierlist: &TierList) -> DbResult<()> 
         b.push_bind(item.id)
             .push_bind(&item.name)
             .push_bind(&item.url)
-            .push_bind(images.get(&item.id));
+            .push_bind(images.get(&item.id))
+            .push_bind(&item.memo);
     });
     qbuilder.build().execute(&mut *tx).await?;
 
@@ -267,17 +270,18 @@ mod tests {
         qbuilder.build().execute(&pool).await.unwrap();
 
         let items = vec![
-            (1, "item1", "url1", Some(vec![0u8, 1, 2])),
-            (2, "item2", "url2", None),
-            (3, "item3", "url3", Some(vec![3u8, 4, 5])),
+            (1, "item1", "url1", Some(vec![0u8, 1, 2]), "memo1"),
+            (2, "item2", "url2", None, "memo2"),
+            (3, "item3", "url3", Some(vec![3u8, 4, 5]), "memo3"),
         ];
         const SQL_ITEMS: &str = "INSERT INTO items(id, name, url, thumb) ";
         let mut qbuilder: QueryBuilder<Sqlite> = QueryBuilder::new(SQL_ITEMS);
-        qbuilder.push_values(items.iter(), |mut b, (id, name, url, thumb)| {
+        qbuilder.push_values(items.iter(), |mut b, (id, name, url, thumb, memo)| {
             b.push_bind(id)
                 .push_bind(*name)
                 .push_bind(*url)
-                .push_bind(thumb);
+                .push_bind(thumb)
+                .push_bind(*memo);
         });
         qbuilder.build().execute(&pool).await.unwrap();
 
@@ -310,6 +314,7 @@ mod tests {
         assert_eq!(item1.id, 1);
         assert_eq!(item1.name, "item1");
         assert_eq!(item1.url, "url1");
+        assert_eq!(item1.memo, "memo1");
 
         let mut thumb1_file = File::open(item1.thumb.as_ref().unwrap()).await.unwrap();
         let mut thumb1 = vec![];
@@ -347,18 +352,21 @@ mod tests {
                     name: "item1".to_owned(),
                     url: "url1".to_owned(),
                     thumb: Some(thumb1_path.to_string_lossy().to_string()),
+                    memo: "memo1".to_owned(),
                 },
                 Item {
                     id: 2,
                     name: "item2".to_owned(),
                     url: "url2".to_owned(),
                     thumb: None,
+                    memo: "memo2".to_owned(),
                 },
                 Item {
                     id: 3,
                     name: "item3".to_owned(),
                     url: "url3".to_owned(),
                     thumb: None,
+                    memo: "memo3".to_owned(),
                 },
             ],
             items_pool: vec![3],
@@ -392,6 +400,7 @@ mod tests {
             .unwrap();
         assert_eq!(rows.len(), 3);
         assert_eq!(rows[0].get::<Vec<u8>, &str>("thumb"), vec![0, 1, 2]);
+        assert_eq!(rows[0].get::<String, &str>("memo"), "memo1");
 
         let rows = sqlx::query("SELECT * FROM items_pos ORDER BY item_id ASC")
             .fetch_all(&pool)

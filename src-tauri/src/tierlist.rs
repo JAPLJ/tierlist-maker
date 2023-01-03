@@ -42,4 +42,5 @@ pub struct Item {
     pub name: String,
     pub url: String,
     pub thumb: Option<String>,
+    pub memo: String,
 }

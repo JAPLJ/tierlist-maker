@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS items (
     id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     url TEXT NOT NULL,
-    thumb NONE  -- blob
+    thumb NONE,  -- blob
+    memo TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS items_pos (

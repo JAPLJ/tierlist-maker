@@ -12,6 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let img_tmp_dir = TempDir::new("imgs")?;
     let tierlist = Mutex::new(tierlist::TierList::empty());
     let cur_sqlite_pool: Mutex<Option<SqlitePool>> = Mutex::new(None);
+    let cur_file: Mutex<Option<String>> = Mutex::new(None);
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             db::commands::read_tierlist_from_db,
@@ -22,6 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             app.manage(img_tmp_dir);
             app.manage(tierlist);
             app.manage(cur_sqlite_pool);
+            app.manage(cur_file);
             Ok(())
         })
         .run(tauri::generate_context!())

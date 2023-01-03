@@ -11,6 +11,7 @@ const DialogAddNew: React.FC<{
     setAmazonUrl("");
     setProductName("");
     setImagePath("");
+    setItemMemo("");
   };
   const handleCancel = () => {
     clearForm();
@@ -18,26 +19,38 @@ const DialogAddNew: React.FC<{
   };
   const handleOk = () => {
     clearForm();
-    props.onClose({ url: amazonUrl, name: productName, thumb: imagePath });
+    props.onClose({
+      url: amazonUrl,
+      name: productName,
+      thumb: imagePath,
+      memo: itemMemo,
+    });
   };
 
   const onChange = (itemData: ItemData) => {
     setAmazonUrl(itemData.url);
     setProductName(itemData.name);
     setImagePath(itemData.thumb ?? "");
+    setItemMemo(itemData.memo);
     setSuccessfullyLoaded(itemData.thumb !== null && itemData.thumb !== "");
   };
 
   const [amazonUrl, setAmazonUrl] = useState("");
   const [productName, setProductName] = useState("");
   const [imagePath, setImagePath] = useState("");
+  const [itemMemo, setItemMemo] = useState("");
   const [successfullyLoaded, setSuccessfullyLoaded] = useState(false);
 
   return (
     <Dialog open={props.open} keepMounted fullWidth maxWidth="md">
       <DialogTitle>Add New Item</DialogTitle>
       <DialogItemView
-        itemData={{ name: productName, url: amazonUrl, thumb: imagePath }}
+        itemData={{
+          name: productName,
+          url: amazonUrl,
+          thumb: imagePath,
+          memo: itemMemo,
+        }}
         onChange={onChange}
       />
       <DialogActions>
